@@ -1,6 +1,7 @@
 #include "led.h"
 #include "main.h"
 #include "preferences.h"
+#include "imu.h"
 
 double hue = 0;
 long animationSetTime = 0;
@@ -23,19 +24,10 @@ int const led_animation_groups[] =
 };
 #undef X
 
-CRGB *tailLeds[TAIL_N_LEDS];
-CRGB *headLeds[HEAD_N_LEDS];
-
-CRGB *combinedLeds[N_LEDS];
+CRGB combinedLeds[N_LEDS];
 
 void SetupLED() {
     // Assign pointers to the combinedLedsRGB array
-    for (int i = 0; i < TAIL_N_LEDS; i++) {
-        combinedLeds[i] = tailLeds[i];
-    }
-    for (int i = 0; i < HEAD_N_LEDS; i++) {
-        combinedLeds[TAIL_N_LEDS + i] = headLeds[i];
-    }
 
     // Now you have a combined array of pointers containing both tailLedsRGB and headLedsRGB
 }
@@ -145,12 +137,12 @@ void IncrementHue() {
 
 void SetPixelColor(int pixel, CRGB color) {
   color = GetColorBrightness(color, GetBrightness());
-  *combinedLeds[pixel] = color;
+  combinedLeds[pixel] = color;
 }
 void SetPixelColor(int pixel, CRGB color, uint8_t brightness) {
   color = GetColorBrightness(color, brightness);
   color = GetColorBrightness(color, GetBrightness());
-  *combinedLeds[pixel] = color;
+  combinedLeds[pixel] = color;
 }
 
 void RainbowFade() {
@@ -159,7 +151,7 @@ void RainbowFade() {
     long pixelHue = static_cast<long>(hue+ (i * perPixel)) % 255;
     SetPixelColor(i, CHSV(static_cast<uint8_t>(pixelHue), 255, 255));
   }
-  Serial.println(GetStepForTime());
+  //Serial.println(GetStepForTime());
   IncrementHue();
   FastLED.show();
 }
@@ -252,7 +244,40 @@ void RainbowFrontBack() {
   FastLED.show();
 }
 
-void Update() {
+
+double movementDeltaTime = 0.0;
+
+void MovementFlashes() {
+  IncrementHue();
+  deltaTimeSecondsMovingLight += deltaTimeSeconds;
+  if(deltaTimeSecondsMovingLight > 0.05) {
+    for(int i=N_LEDS-1; i>=0; i--) {
+      if(i > 0) {
+        SetPixelColor(i, combinedLeds[i-1]);
+      } else {
+        SetPixelColor(i, inAir ? CHSV(static_cast<uint8_t>(hue), 255, 255) : CRGB(0, 0, 0));
+      }
+    }
+  }
+  FastLED.show();
+}
+
+double brightnessMovementFlashes2 = 1;
+void MovementFlashes2() {
+  IncrementHue();
+  if(inAirSignal) brightnessMovementFlashes2 = 1;
+  brightnessMovementFlashes2 -= deltaTimeSeconds * 2;
+  if(brightnessMovementFlashes2 < 0) brightnessMovementFlashes2 = 0;
+  for(int i=0; i<N_LEDS; i++) {
+    SetPixelColor(i, CRGB(255, 255, 255), static_cast<uint8_t>(brightnessMovementFlashes2 * 255));
+  }
+  FastLED.show();
+}
+
+void UpdateLED() {
+  MovementFlashes2();
+  //RainbowFade();
+  return;
   secondsSinceAnimationStart = static_cast<double>(millis() - animationSetTime) / 1000.0;
   switch (currentLEDAnimation)
   {

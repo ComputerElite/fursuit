@@ -1,14 +1,14 @@
 #include <Preferences.h>
-#include "wifi.h"
-#include "animations.h"
-#include "leds.h"
+//#include "wifi.h"
+//#include "animations.h"
+#include "led.h"
 Preferences prefs;
 
 const char* ns = "Tail";
 
 void SavePreferences() {
-    prefs.putString("ssid", ssid);
-    prefs.putString("password", password);
+    //prefs.putString("ssid", ssid);
+    //prefs.putString("password", password);
 }
 
 void ResetPreferences(bool alsoWifi = false) {
@@ -60,10 +60,10 @@ int LoadSavedBrightness() {
 
 void LoadPreferences() {
     prefs.begin(ns);
-    ssid = prefs.getString("ssid", "ComputerElite-Tail-Setup");
-    password = prefs.getString("password", "VerySecure");
+    //ssid = prefs.getString("ssid", "ComputerElite-Tail-Setup");
+    //password = prefs.getString("password", "VerySecure");
     //currentAnimation = LoadSavedAnimation();
-    SetSpeed(LoadSavedSpeed());
+    //SetSpeed(LoadSavedSpeed());
     SetLED(static_cast<LEDAnimation>(LoadSavedLEDAnimation()));
     SetLEDSpeed(LoadSavedLEDSpeed());
     brightnessValueInternal = LoadSavedBrightness();

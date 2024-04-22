@@ -6,14 +6,15 @@ double deltaTimeSeconds = 0;
 long deltaTime = 0;
 long lastLoop = 0;
 
-// put function declarations here:
-int myFunction(int, int);
-
 void setup() {
   // put your setup code here, to run once:
+  Serial.begin(9600); // initialize Serial communication
+  delay(500);
+  //Scanner();
+
   InitIMU();
-  FastLED.addLeds<WS2812B, TAIL_LED_PIN>(tailLeds, getRGBWsize(TAIL_N_LEDS));
-  FastLED.addLeds<WS2812B, HEAD_LED_PIN>(headLeds, getRGBWsize(HEAD_N_LEDS));
+  FastLED.addLeds<WS2812B, TAIL_LED_PIN>(combinedLeds, TAIL_N_LEDS);
+  FastLED.addLeds<WS2812B, HEAD_LED_PIN>(combinedLeds, TAIL_N_LEDS, HEAD_N_LEDS);
 }
 
 void loop() {
@@ -23,9 +24,4 @@ void loop() {
   // put your main code here, to run repeatedly:
   UpdateIMU();
   UpdateLED();
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
 }

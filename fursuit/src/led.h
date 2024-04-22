@@ -1,15 +1,13 @@
 #include <FastLED.h>
 #define TAIL_LED_PIN 16
-#define TAIL_N_LEDS 144
+#define TAIL_N_LEDS 200
 #define HEAD_LED_PIN 17
 #define HEAD_N_LEDS 43
 #define N_LEDS (TAIL_N_LEDS + HEAD_N_LEDS)
 
 #define MAX_BRIGHTNESS 255
 
-extern CRGB *tailLeds[TAIL_N_LEDS];
-extern CRGB *headLeds[HEAD_N_LEDS];
-extern CRGB *combinedLeds[N_LEDS];
+extern CRGB combinedLeds[N_LEDS];
 
 #define LED_ANIMATIONS \
 X(ENUM_START, "Enum start", -1) \
