@@ -5,12 +5,24 @@ const int8_t i2c_addr = 0x69;
 int16_t accelGyro[6]={0}; 
 int rslt;
 
-bool inAir = false;
-bool inAirRaw = false;
-int timesNotInAir = 0;
-int timesInAir = 0;
-bool inAirSignal = false;
-bool toggledInAirSignal = false;
+bool inAir = false; // smoothed value wether IMU thinks it's in the air
+bool inAirRaw = false; // raw value wether IMU thinks it's in the air
+int timesNotInAir = 0; // times the IMU thinks it's not in the air consecutively
+int timesInAir = 0; // times the IMU thinks it's in the air consecutively
+bool inAirStartSignal = false; // signal that we've just started being in the air this update
+long inAirStartSignalTime = 0; // time we've just started being in the in ms
+
+bool inAirMiddleSignal = false; // signal that we're in the middle of being in the air (approximated based on last signals)
+
+
+bool inAirEndSignal = false; // signal that we've just stopped being in the air this update
+long inAirEndSignalTime = 0; // time we've just stopped being in the in ms
+long inAirSignalTime = 0; // time we've been in the air in ms
+bool toggledInAirStartSignal = false; // whether or not we already toggled the start signal
+bool toggledInAirMiddleSignal = false; // whether or not we already toggled the middle signal
+bool toggledInAirEndSignal = false; // whether or not we already toggled the end signal
+
+double accelerationMagnitude = 0; // magnitude of the acceleration
 
 void InitIMU() {
     if (bmi160.softReset() != BMI160_OK){
@@ -35,37 +47,69 @@ bool ReadIMU() {
   }
 }
 
+void UpdateVariables() {
+  // Record whether or not we're in the air according to the measurement
+  inAirRaw = accelerationMagnitude < 0.7;
+
+  // Count the times the IMU thinks it's in the air.
+  if(inAirRaw){
+    timesNotInAir = 0;
+    timesInAir++;
+  } else {
+    timesNotInAir++;
+    timesInAir = 0;
+  }
+
+  // Assume we haven't just started being in air
+  inAirStartSignal = false;
+  inAirEndSignal = false;
+
+  if(timesInAir >= 2) {
+    inAir = true;
+    if(!toggledInAirStartSignal) {
+      inAirStartSignalTime = millis();
+      inAirStartSignal = true;
+    }
+    toggledInAirStartSignal = true;
+
+    toggledInAirEndSignal = false;
+  } else if(timesNotInAir >= 2) {
+    inAir = false;
+
+
+    if(!toggledInAirEndSignal) {
+      inAirEndSignalTime = millis();
+      inAirEndSignal = true;
+
+      inAirSignalTime = inAirEndSignalTime - inAirStartSignalTime;
+      
+    }
+    toggledInAirEndSignal = true;
+    toggledInAirStartSignal = false;
+  }
+
+  inAirMiddleSignal = false;
+  // Trigger estimated air signals
+  if(inAir) {
+    if(inAirStartSignalTime + inAirSignalTime/2 <= millis() && !toggledInAirMiddleSignal) {
+      inAirMiddleSignal = true;
+      toggledInAirMiddleSignal = true;
+    }
+  } else {
+    toggledInAirMiddleSignal = false;
+  }
+}
+
 void UpdateIMU() {
-    int i = 0;
+  int i = 0;
   ReadIMU();
   //get both accel and gyro data from bmi160
   //parameter accelGyro is the pointer to store the data
   if(rslt == 0){
     // magnitude
-    double mag = sqrt(accelGyro[3]*accelGyro[3] + accelGyro[4]*accelGyro[4] + accelGyro[5]*accelGyro[5])/16384.0;
-    
-    inAirRaw = mag < 0.7;
-    if(inAirRaw){
-      timesNotInAir = 0;
-      timesInAir++;
-    } else {
-      timesNotInAir++;
-      timesInAir = 0;
-    }
-
-    inAirSignal = false;
-
-    if(timesInAir >= 2) {
-      inAir = true;
-      inAirSignal = !toggledInAirSignal;
-      toggledInAirSignal = true;
-    } else if(timesNotInAir >= 2) {
-      inAir = false;
-      toggledInAirSignal = false;
-    }
-
+    accelerationMagnitude = sqrt(accelGyro[3]*accelGyro[3] + accelGyro[4]*accelGyro[4] + accelGyro[5]*accelGyro[5])/16384.0;
   }else{
     Serial.println("err");
   }
-  
+  UpdateVariables();
 }

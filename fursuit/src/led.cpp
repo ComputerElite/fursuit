@@ -265,7 +265,7 @@ void MovementFlashes() {
 double brightnessMovementFlashes2 = 1;
 void MovementFlashes2() {
   IncrementHue();
-  if(inAirSignal) brightnessMovementFlashes2 = 1;
+  if(inAirMiddleSignal) brightnessMovementFlashes2 = 1;
   brightnessMovementFlashes2 -= deltaTimeSeconds * 2;
   if(brightnessMovementFlashes2 < 0) brightnessMovementFlashes2 = 0;
   for(int i=0; i<N_LEDS; i++) {
