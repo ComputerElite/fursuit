@@ -2,6 +2,7 @@
 #include "main.h"
 #include "preferences.h"
 #include "imu.h"
+#include <vector>
 
 double hue = 0;
 long animationSetTime = 0;
@@ -27,12 +28,8 @@ int const led_animation_groups[] =
 CRGB combinedLeds[N_LEDS];
 
 void SetupLED() {
-    // Assign pointers to the combinedLedsRGB array
-
-    // Now you have a combined array of pointers containing both tailLedsRGB and headLedsRGB
+    
 }
-
-
 
 void SetBrightness(int brightness) {
   SaveBrightness(brightness);
@@ -246,11 +243,14 @@ void RainbowFrontBack() {
 
 
 double movementDeltaTime = 0.0;
+// std::vector<double> flashInstances = new std::vector<double> {};
+const double movementFlashesStepTime = 0.05;
 
 void MovementFlashes() {
   IncrementHue();
   deltaTimeSecondsMovingLight += deltaTimeSeconds;
-  if(deltaTimeSecondsMovingLight > 0.05) {
+  while(deltaTimeSecondsMovingLight < movementFlashesStepTime) {
+    deltaTimeSecondsMovingLight -= movementFlashesStepTime;
     for(int i=N_LEDS-1; i>=0; i--) {
       if(i > 0) {
         SetPixelColor(i, combinedLeds[i-1]);
