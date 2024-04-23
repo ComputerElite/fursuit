@@ -2,7 +2,6 @@
 #include "main.h"
 #include "preferences.h"
 #include "imu.h"
-#include <vector>
 
 double hue = 0;
 long animationSetTime = 0;
@@ -243,7 +242,6 @@ void RainbowFrontBack() {
 
 
 double movementDeltaTime = 0.0;
-// std::vector<double> flashInstances = new std::vector<double> {};
 const double movementFlashesStepTime = 0.05;
 
 void MovementFlashes() {
