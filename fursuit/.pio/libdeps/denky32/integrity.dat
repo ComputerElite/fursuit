@@ -1,0 +1,4 @@
+Wire
+dfrobot/DFRobot_BMI160@^1.0.0
+fastled/FastLED@^3.6.0
+hideakitai/ArduinoEigen@^0.3.2
