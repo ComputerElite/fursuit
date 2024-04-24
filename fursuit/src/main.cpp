@@ -20,6 +20,7 @@ void loop() {
   deltaTime = millis() - lastLoop;
   deltaTimeSeconds = static_cast<double>(millis() - lastLoop) / 1000.0;
   lastLoop = millis();
+  Serial.print("t");
   Serial.println(lastLoop);
   Serial.print("u");
   Serial.println(deltaTimeSeconds);
