@@ -4,7 +4,7 @@
 
 DFRobot_BMI160 bmi160;
 const int8_t i2c_addr = 0x69;
-int16_t accel[3]={0}; 
+int16_t accel[6]={0}; 
 int rslt;
 
 bool inAir = false; // smoothed value wether IMU thinks it's in the air
@@ -57,11 +57,11 @@ void InitIMU() {
 bool ReadIMU() {
   rslt = bmi160.getAccelData(accel);
   Serial.print("x");
-  Serial.println(accel[0]/16384.0);
+  Serial.println(accel[3]/16384.0);
   Serial.print("y");
-  Serial.println(accel[1]/16384.0);
+  Serial.println(accel[4]/16384.0);
   Serial.print("z");
-  Serial.println(accel[2]/16384.0);
+  Serial.println(accel[5]/16384.0);
   if(rslt == 0){
     return true;
   }else{
