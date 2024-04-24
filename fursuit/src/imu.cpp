@@ -4,7 +4,7 @@
 
 DFRobot_BMI160 bmi160;
 const int8_t i2c_addr = 0x69;
-int16_t accel[3]={0}; 
+int16_t accelGyro[6]={0}; 
 int rslt;
 
 bool inAir = false; // smoothed value wether IMU thinks it's in the air
@@ -36,7 +36,6 @@ const int maxJumpLengths = 3;
 double bpm = 0;
 double bps = 0;
 bool isStrongBeat = false;
-long nextBeatTime = 0;
 
 double accelerationMagnitude = 0; // magnitude of the acceleration
 
@@ -55,13 +54,7 @@ void InitIMU() {
 }
 
 bool ReadIMU() {
-  rslt = bmi160.getAccelData(accel);
-  Serial.print("x");
-  Serial.println(accel[0]/16384.0);
-  Serial.print("y");
-  Serial.println(accel[1]/16384.0);
-  Serial.print("z");
-  Serial.println(accel[2]/16384.0);
+  rslt = bmi160.getAccelGyroData(accelGyro);
   if(rslt == 0){
     return true;
   }else{
@@ -74,11 +67,6 @@ void UpdateVariables() {
   // Record whether or not we're in the air according to the measurement
   inAirRaw = accelerationMagnitude < 0.7;
   correctedTime = millis();
-
-  //Serial.print("t");
-  //Serial.println(correctedTime);
-  Serial.print("a");
-  Serial.println(accelerationMagnitude);
 
   // Count the times the IMU thinks it's in the air.
   if(inAirRaw){
@@ -106,11 +94,6 @@ void UpdateVariables() {
       jumpLengths.push_back(currentJumpLength);
       inAirStartSignalTime = timeOfFirstInAirMeasurement;
       inAirStartSignal = true;
-
-      //Serial.print("t");
-      //Serial.println(timeOfFirstInAirMeasurement);
-      Serial.println("s");
-
       toggledBeatSignal = false;
     }
     toggledInAirStartSignal = true;
@@ -123,9 +106,6 @@ void UpdateVariables() {
     if(!toggledInAirEndSignal) {
       inAirEndSignalTime = timeOfFirstNotInAirMeasurement;
       inAirEndSignal = true;
-      //Serial.print("t");
-      //Serial.println(timeOfFirstInAirMeasurement);
-      Serial.println("e");
 
       inAirSignalTime = inAirEndSignalTime - inAirStartSignalTime;
       
@@ -140,9 +120,6 @@ void UpdateVariables() {
     if(inAirStartSignalTime + inAirSignalTime/2 <= correctedTime && !toggledInAirMiddleSignal) {
       inAirMiddleSignal = true;
       toggledInAirMiddleSignal = true;
-      //Serial.print("t");
-      //Serial.println(inAirStartSignalTime + inAirSignalTime/2);
-      Serial.println("m");
     }
   } else {
     toggledInAirMiddleSignal = false;
@@ -164,14 +141,13 @@ void UpdateVariables() {
 
   // Trigger beat signal
   beatSignal = false;
-  nextBeatTime = inAirStartSignalTime + inAirSignalTime / 2 + avgJumpLength / 2;
-  if(nextBeatTime <= correctedTime && !toggledBeatSignal) {
+  if(inAirStartSignalTime + inAirSignalTime / 2 + avgJumpLength / 2 <= correctedTime && !toggledBeatSignal) {
     toggledBeatSignal = true;
     isStrongBeat ^= true;
     beatSignal = true;
-    //Serial.print("t");
-    //Serial.println(nextBeatTime);
-    Serial.print("b");
+    Serial.print("beat ");
+    Serial.println(correctedTime);
+    Serial.print("bpm ");
     Serial.println(bpm);
   }
 
@@ -184,7 +160,7 @@ void UpdateIMU() {
   //parameter accelGyro is the pointer to store the data
   if(rslt == 0){
     // magnitude
-    accelerationMagnitude = sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2])/16384.0;
+    accelerationMagnitude = sqrt(accelGyro[3]*accelGyro[3] + accelGyro[4]*accelGyro[4] + accelGyro[5]*accelGyro[5])/16384.0;
   }else{
     Serial.println("err");
   }

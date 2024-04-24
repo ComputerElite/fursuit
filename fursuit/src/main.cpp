@@ -20,8 +20,7 @@ void loop() {
   deltaTime = millis() - lastLoop;
   deltaTimeSeconds = static_cast<double>(millis() - lastLoop) / 1000.0;
   lastLoop = millis();
-  Serial.println(lastLoop);
-  Serial.print("u");
+  Serial.print("time per update (s) ");
   Serial.println(deltaTimeSeconds);
   // put your main code here, to run repeatedly:
   UpdateIMU();
