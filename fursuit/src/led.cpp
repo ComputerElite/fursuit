@@ -242,12 +242,12 @@ void RainbowFrontBack() {
 
 
 double movementDeltaTime = 0.0;
-const double movementFlashesStepTime = 0.05;
+const double movementFlashesStepTime = 0.03;
 
 void MovementFlashes() {
   IncrementHue();
   deltaTimeSecondsMovingLight += deltaTimeSeconds;
-  while(deltaTimeSecondsMovingLight < movementFlashesStepTime) {
+  while(deltaTimeSecondsMovingLight >= movementFlashesStepTime) {
     deltaTimeSecondsMovingLight -= movementFlashesStepTime;
     for(int i=N_LEDS-1; i>=0; i--) {
       if(i > 0) {
@@ -263,11 +263,12 @@ void MovementFlashes() {
 double brightnessMovementFlashes2 = 1;
 void MovementFlashes2() {
   IncrementHue();
-  if(inAirMiddleSignal) brightnessMovementFlashes2 = 1;
-  brightnessMovementFlashes2 -= deltaTimeSeconds * 2;
+  if(beatSignal) brightnessMovementFlashes2 = 1;
+  brightnessMovementFlashes2 -= deltaTimeSeconds * bps;
   if(brightnessMovementFlashes2 < 0) brightnessMovementFlashes2 = 0;
+  double brightnessValue = (isStrongBeat ? 1 : 0.5) - sqrt(1 - brightnessMovementFlashes2) * (isStrongBeat ? 0.95 : 0.45);
   for(int i=0; i<N_LEDS; i++) {
-    SetPixelColor(i, CRGB(255, 255, 255), static_cast<uint8_t>(brightnessMovementFlashes2 * 255));
+    SetPixelColor(i, CHSV(static_cast<uint8_t>(hue), 255, 255), static_cast<uint8_t>(brightnessValue * 255));
   }
   FastLED.show();
 }
