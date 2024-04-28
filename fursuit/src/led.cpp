@@ -259,13 +259,14 @@ void PrecomputeBrightnessMultiplier() {
   if(beatSignal) brightnessMovementFlashesPrimary = 1;
   brightnessMovementFlashesPrimary -= deltaTimeSeconds * bps;
   if(brightnessMovementFlashesPrimary < 0) brightnessMovementFlashesPrimary = 0;
-  double startValue = isStrongBeat ? 1 : 0.5;
-  double multiplyValue = isStrongBeat ? 0.95 : 0.45;
-  if(secondaryAnimationEnabled && isStrongBeat) {
+  double startValue = isStrongBeat ? 1.1 : 0.5;
+  double multiplyValue = isStrongBeat ? 1.05 : 0.45;
+  if(secondaryAnimationEnabled && !isStrongBeat) {
     startValue = 0;
     multiplyValue = 0.0;
   }
   double expectedValue = startValue - sqrt(1 - brightnessMovementFlashesPrimary) * multiplyValue;
+  if(expectedValue > 1) expectedValue = 1;
   brightnessMovementFlashesPrimaryFrameBrightness = expectedValue;
   if(lastLoop - beatSignalTime > 5000) {
     // after 5 seconds start brightening leds again
