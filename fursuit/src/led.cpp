@@ -2,12 +2,12 @@
 #include "main.h"
 #include "preferences.h"
 #include "imu.h"
+#include "controls.h"
 
 double hue = 0;
 long animationSetTime = 0;
 double secondsSinceAnimationStart = 0;
 double animationSpeed = 7;
-LEDAnimation currentLEDAnimation = RAINBOW_FADE;
 uint8_t brightnessValueInternal = 255;
 
 #define X(a, name, group) name,
@@ -57,10 +57,6 @@ double GetLEDSpeed() {
   return animationSpeed;
 }
 
-LEDAnimation GetLED() {
-  return currentLEDAnimation;
-}
-
 CRGB GetColorBrightness(CRGB color, uint8_t brightness) {
   //return color;
 
@@ -85,7 +81,6 @@ double Lerp(double a, double b, double percentage) {
 
 
 void SetLED(LEDAnimation animation) {
-  currentLEDAnimation = animation;
   SaveLEDAnimation(animation);
   animationSetTime = millis();
   if(animation == WIFI_CONNECTED) {
@@ -136,19 +131,11 @@ void SetPixelColor(int pixel, CRGB color) {
   combinedLeds[pixel] = color;
 }
 void SetPixelColor(int pixel, CRGB color, uint8_t brightness) {
+  // sets a pixels color. Ignored if brightness is 0
+  if(brightness <= 0) return;
   color = GetColorBrightness(color, brightness);
   color = GetColorBrightness(color, GetBrightness());
   combinedLeds[pixel] = color;
-}
-
-void RainbowFade() {
-  double perPixel = 255.0 / N_LEDS;
-  for(int i=0; i<N_LEDS; i++) { 
-    long pixelHue = static_cast<long>(hue+ (i * perPixel)) % 255;
-    SetPixelColor(i, CHSV(static_cast<uint8_t>(pixelHue), 255, 255));
-  }
-  //Serial.println(GetStepForTime());
-  IncrementHue();
 }
 
 void SetAllPixelsNonShow(CRGB color) {
@@ -187,96 +174,6 @@ void LerpBreathsPerSecond0ToBreathsPerSecond1() {
   currentBreathsPerSecond = Lerp(breathsPerSecond0, breathsPerSecond1, secondsSinceAnimationStart * breathsLerpFactor);
 }
 
-void Christmas1() {
-  IncrementHue();
-
-  for(int i=0; i<N_LEDS; i++) {
-    bool isRed = (i + 1) % 8 < 4;
-    if(static_cast<int>(hue) % 64 < 32) isRed = !isRed;
-    SetPixelColor(i, isRed ? CRGB(255, 0, 0) : CRGB(255, 255, 255));
-  }
-}
-
-int currentMovingLightPixel = 0;
-double deltaTimeSecondsMovingLight = 0;
-int direction = 1;
-double additionalPixelData[N_LEDS];
-void MovingLight() {
-  // Light bounces back and forth
-  deltaTimeSecondsMovingLight += deltaTimeSeconds;
-  if(deltaTimeSecondsMovingLight > 2 / animationSpeed) {
-    deltaTimeSecondsMovingLight = 0;
-    currentMovingLightPixel += 1 * direction;
-    additionalPixelData[currentMovingLightPixel] = 1.0;
-    if(currentMovingLightPixel >= N_LEDS) direction = -1;
-    if(currentMovingLightPixel <= 0) direction = 1;
-  }
-  SetAllPixelsNonShow(CRGB(0, 0, 0));
-  for(int i=0; i<N_LEDS; i++) {
-    if(additionalPixelData[i] > 0) {
-      additionalPixelData[i] -= animationSpeed * deltaTimeSeconds * 0.07;
-      if(additionalPixelData[i] < 0) additionalPixelData[i] = 0;
-      SetPixelColor(i, CHSV(static_cast<uint8_t>(hue + i * 5), 200, 255), static_cast<uint8_t>(additionalPixelData[i] * 255));
-    }
-  }
-}
-
-void RainbowFrontBack() {
-  // Light bounces back and forth
-  IncrementHue();
-  deltaTimeSecondsMovingLight += deltaTimeSeconds;
-  if(deltaTimeSecondsMovingLight > 2 / animationSpeed) {
-    deltaTimeSecondsMovingLight = 0;
-    currentMovingLightPixel += 1;
-    if(currentMovingLightPixel >= N_LEDS) currentMovingLightPixel = 0;
-  }
-  SetPixelColor(currentMovingLightPixel, CHSV(static_cast<uint8_t>(hue), 255, 255));
-}
-
-
-double movementDeltaTime = 0.0;
-const double movementFlashesStepTime = 0.015;
-CRGB movementFlashedLEDStatus[N_LEDS] = {CRGB(0, 0, 0)};
-
-void MovementFlashes() {
-  IncrementHue();
-  deltaTimeSecondsMovingLight += deltaTimeSeconds;
-  while(deltaTimeSecondsMovingLight >= movementFlashesStepTime) {
-    deltaTimeSecondsMovingLight -= movementFlashesStepTime;
-    for(int i=N_LEDS-1; i>=0; i--) {
-      if(i > 0) {
-        movementFlashedLEDStatus[i] = movementFlashedLEDStatus[i-1];
-      } else {
-        movementFlashedLEDStatus[i] = !isStrongBeat && beatSignalTime + 300 / bps >= millis() ? CHSV(static_cast<uint8_t>(hue + 127), 255, 255) : CRGB(0, 0, 0);
-      }
-      if(movementFlashedLEDStatus[i].r + movementFlashedLEDStatus[i].g + movementFlashedLEDStatus[i].b > 10) SetPixelColor(i, movementFlashedLEDStatus[i]);
-    }
-  }
-}
-
-double brightnessMovementFlashes2 = 1;
-void MovementFlashes2() {
-  IncrementHue();
-  if(beatSignal) brightnessMovementFlashes2 = 1;
-  brightnessMovementFlashes2 -= deltaTimeSeconds * bps;
-  if(brightnessMovementFlashes2 < 0) brightnessMovementFlashes2 = 0;
-  double brightnessValue = (isStrongBeat ? 1 : 0.5) - sqrt(1 - brightnessMovementFlashes2) * (isStrongBeat ? 0.95 : 0.45);
-  for(int i=0; i<N_LEDS; i++) {
-    SetPixelColor(i, CHSV(static_cast<uint8_t>(hue), 255, 255), static_cast<uint8_t>(brightnessValue * 255));
-  }
-}
-
-void MovementFlashes3() {
-  IncrementHue();
-  if(beatSignal) brightnessMovementFlashes2 = 1;
-  brightnessMovementFlashes2 -= deltaTimeSeconds * bps;
-  if(brightnessMovementFlashes2 < 0) brightnessMovementFlashes2 = 0;
-  double brightnessValue = (isStrongBeat ? 1 : 0) - sqrt(1 - brightnessMovementFlashes2) * (isStrongBeat ? 0.95 : 0.0);
-  for(int i=0; i<N_LEDS; i++) {
-    SetPixelColor(i, CHSV(static_cast<uint8_t>(hue), 255, 255), static_cast<uint8_t>(brightnessValue * 255));
-  }
-}
-
 long beatLEDTriggerTime = 0;
 double beatLEDTriggerLength = 0;
 uint8_t beatLEDBrightness = 0;
@@ -289,68 +186,139 @@ void UpdateStatusLEDs() {
   SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
 }
 
-void UpdateLED() {
-  SetAllPixelsNonShow(CRGB(0, 0, 0));
-  MovementFlashes3();
-  MovementFlashes();
-  UpdateStatusLEDs();
-  FastLED.show();
-  //RainbowFade();
-  return;
-  secondsSinceAnimationStart = static_cast<double>(millis() - animationSetTime) / 1000.0;
-  switch (currentLEDAnimation)
+double brightnessMovementFlashesPrimary = 1;
+double brightnessMovementFlashesPrimaryFrameBrightness = 1;
+
+double GetBeatBrightnessMultiplier(AnimationType type, int ledIndex) {
+  if(!applyBeatSignalOntoLEDs) return 1.0;
+  switch(type) {
+    case PRIMARY:
+      return brightnessMovementFlashesPrimaryFrameBrightness;
+      break;
+    case SECONDARY:
+      break;
+  }
+  return 1.0;
+}
+uint8_t GetBeatBrightnessMultiplierUInt8(AnimationType type, int ledIndex) {
+  return static_cast<uint8_t>(GetBeatBrightnessMultiplier(type, ledIndex) * 255);
+}
+
+double GetHueBasedOnAnimationType(AnimationType type) {
+  switch(type) {
+    case PRIMARY:
+      return hue;
+      break;
+    case SECONDARY:
+      return hue + 127.0;
+      break;
+  }
+  return hue;
+}
+
+
+double movementDeltaTime = 0.0;
+const double movementFlashesStepTime = 0.015;
+CRGB movementFlashedLEDStatus[N_LEDS] = {CRGB(0, 0, 0)};
+void SetPixelColorWithType(int ledIndex, CRGB desiredColor, double desiredBrightness, AnimationType type) {
+  if(desiredBrightness > 1) desiredBrightness = 1;
+  if(desiredBrightness < 0) desiredBrightness = 0;
+  switch(type) {
+    case PRIMARY:
+      // Primary is just pulsing. The brightness multiplier is important for controling everything.
+      SetPixelColor(ledIndex, desiredColor, static_cast<uint8_t>(desiredBrightness * GetBeatBrightnessMultiplierUInt8(type, ledIndex)));
+      return;
+    case SECONDARY:
+      if(!secondaryAnimationEnabled) return;
+      if(ledIndex != 0) return;
+      movementDeltaTime += deltaTimeSeconds;
+      while(movementDeltaTime >= movementFlashesStepTime) {
+        movementDeltaTime -= movementFlashesStepTime;
+        for(int i=N_LEDS-1; i>=0; i--) {
+          if(i > 0) {
+            movementFlashedLEDStatus[i] = movementFlashedLEDStatus[i-1];
+          } else {
+            // they should light up for 30% of the beat length
+            movementFlashedLEDStatus[i] = !isStrongBeat && beatSignalTime + 300 / bps >= millis() ? desiredColor : CRGB(0, 0, 0);
+          }
+          if(movementFlashedLEDStatus[i].r + movementFlashedLEDStatus[i].g + movementFlashedLEDStatus[i].b > 10) SetPixelColor(i, movementFlashedLEDStatus[i]);
+        }
+      }
+      return;
+  }
+}
+
+void AnimationRainbowStatic(AnimationType type) {
+  for(int i=0; i<N_LEDS; i++) {
+    SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(GetHueBasedOnAnimationType(type)), 255, 255), 1.0, type);
+  }
+}
+
+void AnimationRainbowFade(AnimationType type) {
+  double perPixel = 255.0 / N_LEDS;
+  for(int i=0; i<N_LEDS; i++) { 
+    long pixelHue = static_cast<long>(GetHueBasedOnAnimationType(type)+ (i * perPixel)) % 255;
+    SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(pixelHue), 255, 255), 1.0, type);
+  }
+}
+
+
+
+void PrecomputeBrightnessMultiplier() {
+  // Precompute brightness for primary animation
+  // light up on beats and slowly fade out
+  // If no movement for 5 seconds, start brightening leds again
+
+  if(beatSignal) brightnessMovementFlashesPrimary = 1;
+  brightnessMovementFlashesPrimary -= deltaTimeSeconds * bps;
+  if(brightnessMovementFlashesPrimary < 0) brightnessMovementFlashesPrimary = 0;
+  double startValue = isStrongBeat ? 1 : 0.5;
+  double multiplyValue = isStrongBeat ? 0.95 : 0.45;
+  if(secondaryAnimationEnabled && isStrongBeat) {
+    startValue = 0;
+    multiplyValue = 0.0;
+  }
+  double expectedValue = startValue - sqrt(1 - brightnessMovementFlashesPrimary) * multiplyValue;
+  brightnessMovementFlashesPrimaryFrameBrightness = expectedValue;
+  if(lastLoop - beatSignalTime > 5000) {
+    // after 5 seconds start brightening leds again
+    brightnessMovementFlashesPrimaryFrameBrightness = expectedValue + (lastLoop - beatSignalTime - 5000) / 4000.0;
+    if(brightnessMovementFlashesPrimaryFrameBrightness > 1) brightnessMovementFlashesPrimaryFrameBrightness = 1;
+  }
+}
+
+void ApplyAnimation(AnimationType type, LEDAnimation animation) {
+  switch (animation)
   {
+  case RAINBOW_STATIC:
+    AnimationRainbowStatic(type);
+    break;
   case RAINBOW_FADE:
-    RainbowFade();
-    break;
-  case WIFI_SOFT_AP_OPEN:
-    LerpColor0ToColor1();
-    LerpBreathsPerSecond0ToBreathsPerSecond1();
-    Breathe(currentColor);
-    break;
-  case WIFI_CONNECTING:
-    LerpColor0ToColor1();
-    LerpBreathsPerSecond0ToBreathsPerSecond1();
-    Breathe(currentColor);
-    break;
-  case WIFI_CONNECTED:
-    LerpColor0ToColor1();
-    LerpBreathsPerSecond0ToBreathsPerSecond1();
-    Breathe(currentColor);
-    break;
-  case OFF:
-    SetColor(CRGB(0, 0, 0));
-    break;
-  case WIFI_CONNECTION_FAILED:
-    LerpColor0ToColor1();
-    LerpBreathsPerSecond0ToBreathsPerSecond1();
-    Breathe(currentColor);
-    break;
-  case CHRISTMAS_1:
-    Christmas1();
-    break;
-  case MOVING_LIGHT:
-    MovingLight();
-    break;
-  case STATIC_LIGHT:
-    SetColor(color0);
-    break;
-  case BREATHE_SLOW:
-    currentBreathsPerSecond = 0.25;
-    Breathe(color0);
-    break;
-  case BREATHE_MID:
-    currentBreathsPerSecond = 0.5;
-    Breathe(color0);
-    break;
-  case BREATHE_FAST:
-    currentBreathsPerSecond = 2;
-    Breathe(color0);
-    break;
-  case RAINBOW_FRONT_BACK:
-    RainbowFrontBack();
+    AnimationRainbowFade(type);
     break;
   default:
     break;
   }
+}
+
+void ApplyPrimaryAnimation() {
+  ApplyAnimation(PRIMARY, primaryAnimation);
+}
+
+void ApplySecondaryAnimation() {
+  ApplyAnimation(SECONDARY, primaryAnimation);
+}
+
+
+void UpdateLED() {
+  SetAllPixelsNonShow(CRGB(0, 0, 0)); // reset strip
+  IncrementHue(); // Increment hue each frame
+  PrecomputeBrightnessMultiplier();
+  ApplyPrimaryAnimation();
+  if(secondaryAnimationEnabled) ApplySecondaryAnimation();
+
+  UpdateStatusLEDs();
+  FastLED.show();
+  //RainbowFade();
+  return;
 }

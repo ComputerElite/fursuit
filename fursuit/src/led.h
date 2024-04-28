@@ -13,19 +13,13 @@ extern CRGB combinedLeds[N_LEDS];
 
 #define LED_ANIMATIONS \
 X(ENUM_START, "Enum start", -1) \
+X(RAINBOW_STATIC, "Rainbow Static", 1) \
 X(RAINBOW_FADE, "Rainbow Fade", 1) \
-X(RAINBOW_FRONT_BACK, "Rainbow Front to Back", 1) \
-X(WIFI_SOFT_AP_OPEN, "Wifi Soft AP Open", 0) \
-X(WIFI_CONNECTING, "Wifi Connecting", 0) \
-X(WIFI_CONNECTION_FAILED, "Wifi Connection Failed", 0) \
-X(WIFI_CONNECTED, "Wifi Connected", 0) \
 X(OFF, "Off", 1) \
-X(CHRISTMAS_1, "Candy cane",1) \
-X(MOVING_LIGHT, "Moving light",1) \
-X(STATIC_LIGHT, "Static",1) \
-X(BREATHE_SLOW, "Breathe slow",1) \
-X(BREATHE_MID, "Breathe mid",1) \
-X(BREATHE_FAST, "Breathe fast",1) \
+X(WIFI_CONNECTING, "Wifi connecting", 2) \
+X(WIFI_CONNECTED, "Wifi connected", 2) \
+X(WIFI_SOFT_AP_OPEN, "Wifi soft ap open", 2) \
+X(WIFI_CONNECTION_FAILED, "Wifi connection failed", 2) \
 X(ENUM_END, "Enum end", -1)
 
 #define X(a, name, group) a,
