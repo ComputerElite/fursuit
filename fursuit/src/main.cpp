@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include "imu.h"
 #include "led.h"
+#include "wifi.h"
+#include "server.h"
+#include "preferences.h"
 
 double deltaTimeSeconds = 0;
 long deltaTime = 0;
@@ -10,11 +13,14 @@ bool serialOn = false;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600); // initialize Serial communication
+  FastLED.addLeds<NEOPIXEL, TAIL_LED_PIN>(combinedLeds, TAIL_N_LEDS);
+  FastLED.addLeds<NEOPIXEL, HEAD_LED_PIN>(combinedLeds, TAIL_N_LEDS, HEAD_N_LEDS);
   //Scanner();
-
+  LoadPreferences();
   InitIMU();
-  FastLED.addLeds<WS2812B, TAIL_LED_PIN>(combinedLeds, TAIL_N_LEDS);
-  FastLED.addLeds<WS2812B, HEAD_LED_PIN>(combinedLeds, TAIL_N_LEDS, HEAD_N_LEDS);
+  BeginWifi();
+  SetupServer();
+  RestartServer();
 }
 
 void loop() {
@@ -30,4 +36,5 @@ void loop() {
   // put your main code here, to run repeatedly:
   UpdateIMU();
   UpdateLED();
+  HandleWifi();
 }

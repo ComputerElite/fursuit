@@ -3,6 +3,7 @@
 #include "preferences.h"
 #include "imu.h"
 #include "controls.h"
+#include "wifi.h"
 
 double hue = 0;
 long animationSetTime = 0;
@@ -79,44 +80,6 @@ double Lerp(double a, double b, double percentage) {
   return a + (b - a) * percentage;
 }
 
-
-void SetLED(LEDAnimation animation) {
-  SaveLEDAnimation(animation);
-  animationSetTime = millis();
-  if(animation == WIFI_CONNECTED) {
-    color0 = currentColor;
-    color1 = CRGB(0, 255, 0);
-    breathsPerSecond0 = currentBreathsPerSecond;
-    breathsPerSecond1 = 0.3;
-    breathsLerpFactor = 1;
-    return;
-  }
-  if(animation == WIFI_CONNECTING) {
-    color0 = currentColor;
-    color1 = CRGB(0, 229, 255);
-    breathsPerSecond0 = currentBreathsPerSecond;
-    breathsPerSecond1 = 1;
-    breathsLerpFactor = 1;
-    return;
-  }
-  if(animation == WIFI_SOFT_AP_OPEN) {
-    color0 = currentColor;
-    color1 = CRGB(255, 255, 0);
-    breathsPerSecond0 = currentBreathsPerSecond;
-    breathsPerSecond1 = 0.5;
-    breathsLerpFactor = 1;
-    return;
-  }
-  if(animation == WIFI_CONNECTION_FAILED) {
-    color0 = currentColor;
-    color1 = CRGB(255, 0, 0);
-    breathsPerSecond0 = currentBreathsPerSecond;
-    breathsPerSecond1 = 2;
-    breathsLerpFactor = 0.5;
-    return;
-  }
-}
-
 double GetStepForTime() {
   return deltaTime / 1000.0 * animationSpeed;
 }
@@ -132,7 +95,6 @@ void SetPixelColor(int pixel, CRGB color) {
 }
 void SetPixelColor(int pixel, CRGB color, uint8_t brightness) {
   // sets a pixels color. Ignored if brightness is 0
-  if(brightness <= 0) return;
   color = GetColorBrightness(color, brightness);
   color = GetColorBrightness(color, GetBrightness());
   combinedLeds[pixel] = color;
@@ -184,6 +146,26 @@ void UpdateStatusLEDs() {
   }
   beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
   SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
+  CRGB wifiColor = CRGB(0, 0, 0);
+  uint8_t wifiBrightness = STATUS_LED_MAX_BRIGHTNESS * 255;
+  switch(wifiStatusEnum) {
+    case WifiStatus::WIFI_CONNECTED:
+      wifiColor = CRGB(0, 255, 0);
+
+      break;
+    case WifiStatus::WIFI_CONNECTING:
+      wifiColor = CRGB(0, 229, 255);
+      wifiBrightness = static_cast<uint8_t>((lastLoop / 10 % 255) * STATUS_LED_MAX_BRIGHTNESS);
+      break;
+    case WifiStatus::WIFI_AP_OPEN:
+      wifiColor = CRGB(255, 255, 0);
+      break;
+    case WifiStatus::WIFI_CONNECTION_FAILED:
+      wifiColor = CRGB(255, 0, 0);
+      wifiBrightness = static_cast<uint8_t>((lastLoop / 6 % 255) * STATUS_LED_MAX_BRIGHTNESS);
+      break;
+  }
+  SetPixelColor(STATUS_LED_START_INDEX+1, wifiColor, wifiBrightness);
 }
 
 double brightnessMovementFlashesPrimary = 1;
@@ -262,6 +244,11 @@ void AnimationRainbowFade(AnimationType type) {
   }
 }
 
+void AnimationStatic(AnimationType type) {
+  for(int i=0; i<N_LEDS; i++) { 
+    SetPixelColorWithType(i, CRGB(255, 0, 0), 1.0, type);
+  }
+}
 
 
 void PrecomputeBrightnessMultiplier() {
@@ -296,6 +283,9 @@ void ApplyAnimation(AnimationType type, LEDAnimation animation) {
   case RAINBOW_FADE:
     AnimationRainbowFade(type);
     break;
+  case STATIC:
+    AnimationStatic(type);
+    break;
   default:
     break;
   }
@@ -306,7 +296,7 @@ void ApplyPrimaryAnimation() {
 }
 
 void ApplySecondaryAnimation() {
-  ApplyAnimation(SECONDARY, primaryAnimation);
+  ApplyAnimation(SECONDARY, secondaryAnimation);
 }
 
 

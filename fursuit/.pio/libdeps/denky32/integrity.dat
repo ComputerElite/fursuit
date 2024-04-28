@@ -1,4 +1,5 @@
-Wire
-dfrobot/DFRobot_BMI160@^1.0.0
 fastled/FastLED@^3.6.0
-hideakitai/ArduinoEigen@^0.3.2
+bblanchon/ArduinoJson@^6.21.3
+dfrobot/DFRobot_BMI160@^1.0.0
+Wire
+esphome/ESPAsyncWebServer-esphome@^3.1.0

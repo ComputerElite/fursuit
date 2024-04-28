@@ -1,3 +1,5 @@
+#define AP_NAME "computerelite-suit-setup"
+
 extern void LoadPreferences();
 extern void SavePreferences();
 extern void SaveAnimation(int animation);
