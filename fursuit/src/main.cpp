@@ -5,6 +5,7 @@
 double deltaTimeSeconds = 0;
 long deltaTime = 0;
 long lastLoop = 0;
+bool serialOn = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -20,10 +21,12 @@ void loop() {
   deltaTime = millis() - lastLoop;
   deltaTimeSeconds = static_cast<double>(millis() - lastLoop) / 1000.0;
   lastLoop = millis();
-  Serial.print("t");
-  Serial.println(lastLoop);
-  Serial.print("u");
-  Serial.println(deltaTimeSeconds);
+  if(serialOn) {
+    Serial.print("t");
+    Serial.println(lastLoop);
+    Serial.print("u");
+    Serial.println(deltaTimeSeconds);
+  }
   // put your main code here, to run repeatedly:
   UpdateIMU();
   UpdateLED();

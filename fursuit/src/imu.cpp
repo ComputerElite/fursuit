@@ -37,6 +37,7 @@ double bpm = 0;
 double bps = 0;
 bool isStrongBeat = false;
 long nextBeatTime = 0;
+long beatSignalTime = 0;
 
 double accelerationMagnitude = 0; // magnitude of the acceleration
 
@@ -56,6 +57,14 @@ void InitIMU() {
 
 bool ReadIMU() {
   rslt = bmi160.getAccelData(accel);
+  if(serialOn) {
+    Serial.print("x");
+    Serial.println(accel[0]/16384.0);
+    Serial.print("y");
+    Serial.println(accel[1]/16384.0);
+    Serial.print("z");
+    Serial.println(accel[2]/16384.0);
+  }
   if(rslt == 0){
     return true;
   }else{
@@ -69,12 +78,14 @@ void UpdateVariables() {
   inAirRaw = accelerationMagnitude < 0.7;
   correctedTime = millis();
 
-  //Serial.print("t");
-  //Serial.println(correctedTime);
-  Serial.print("a");
-  Serial.println(accelerationMagnitude);
+  if(serialOn) {
+    //Serial.print("t");
+    //Serial.println(correctedTime);
+    Serial.print("a");
+    Serial.println(accelerationMagnitude);
+  }
 
-  // Count the times the IMU thinks it's in the air.
+  // Count the times the IMU thinks it's in the air and thus smooth output
   if(inAirRaw){
     if(timesInAir == 0) {
       timeOfFirstInAirMeasurement = correctedTime; // set time of first measurement for later use
@@ -89,21 +100,30 @@ void UpdateVariables() {
     timesInAir = 0;
   }
 
+
+
   // Assume we haven't just started being in air
   inAirStartSignal = false;
   inAirEndSignal = false;
 
+  bool lastBeatWasALongTimeAgo = correctedTime - beatSignalTime > 1500;
+
   if(timesInAir >= 2) {
     inAir = true;
     if(!toggledInAirStartSignal) {
-      currentJumpLength = correctedTime - inAirStartSignalTime;
+      if(!lastBeatWasALongTimeAgo) {
+        // Only record current jump length if jumps are regular. This way the beat signal will resume instantly when jumping again
+        currentJumpLength = correctedTime - inAirStartSignalTime;
+      }
       jumpLengths.push_back(currentJumpLength);
       inAirStartSignalTime = timeOfFirstInAirMeasurement;
       inAirStartSignal = true;
 
-      //Serial.print("t");
-      //Serial.println(timeOfFirstInAirMeasurement);
-      Serial.println("s");
+      if(serialOn) {
+        //Serial.print("t");
+        //Serial.println(timeOfFirstInAirMeasurement);
+        Serial.println("s");
+      }
 
       toggledBeatSignal = false;
     }
@@ -117,9 +137,11 @@ void UpdateVariables() {
     if(!toggledInAirEndSignal) {
       inAirEndSignalTime = timeOfFirstNotInAirMeasurement;
       inAirEndSignal = true;
-      //Serial.print("t");
-      //Serial.println(timeOfFirstInAirMeasurement);
-      Serial.println("e");
+      if(serialOn) {
+        //Serial.print("t");
+        //Serial.println(timeOfFirstInAirMeasurement);
+        Serial.println("e");
+      }
 
       inAirSignalTime = inAirEndSignalTime - inAirStartSignalTime;
       
@@ -134,9 +156,11 @@ void UpdateVariables() {
     if(inAirStartSignalTime + inAirSignalTime/2 <= correctedTime && !toggledInAirMiddleSignal) {
       inAirMiddleSignal = true;
       toggledInAirMiddleSignal = true;
-      //Serial.print("t");
-      //Serial.println(inAirStartSignalTime + inAirSignalTime/2);
-      Serial.println("m");
+      if(serialOn) {
+        //Serial.print("t");
+        //Serial.println(inAirStartSignalTime + inAirSignalTime/2);
+        Serial.println("m");
+      }
     }
   } else {
     toggledInAirMiddleSignal = false;
@@ -163,10 +187,13 @@ void UpdateVariables() {
     toggledBeatSignal = true;
     isStrongBeat ^= true;
     beatSignal = true;
-    //Serial.print("t");
-    //Serial.println(nextBeatTime);
-    Serial.print("b");
-    Serial.println(bpm);
+    beatSignalTime = nextBeatTime;
+    if(serialOn) {
+      //Serial.print("t");
+      //Serial.println(nextBeatTime);
+      Serial.print("b");
+      Serial.println(bpm);
+    }
   }
 
 }
