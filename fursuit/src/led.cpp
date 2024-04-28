@@ -140,14 +140,19 @@ long beatLEDTriggerTime = 0;
 double beatLEDTriggerLength = 0;
 uint8_t beatLEDBrightness = 0;
 void UpdateStatusLEDs() {
-  if(beatSignal) {
-    beatLEDTriggerTime = millis();
-    beatLEDTriggerLength = isStrongBeat ? 100 : 10;
+  if(applyBeatSignalOntoLEDs) {
+    if(beatSignal) {
+      beatLEDTriggerTime = millis();
+      beatLEDTriggerLength = isStrongBeat ? 100 : 10;
+    }
+    beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
+    SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
+  } else {
+    SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 0, 0), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255));
   }
-  beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
-  SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
+  
   CRGB wifiColor = CRGB(0, 0, 0);
-  uint8_t wifiBrightness = STATUS_LED_MAX_BRIGHTNESS * 255;
+  uint8_t wifiBrightness = static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255);
   switch(wifiStatusEnum) {
     case WifiStatus::WIFI_CONNECTED:
       wifiColor = CRGB(0, 255, 0);

@@ -41,6 +41,8 @@ const char index_html[] PROGMEM = R"rawliteral(
   <div class="grid" id="secondary">
 
   </div>
+  <h3>Beat detection</h3>
+  <label><input type="checkbox" id="beatSignal">Beat detectio</label>
   <h3>WiFi</h3>
   <label>SSID<input type="text" id="ssid"></label><br>
   <label>Password<input type="password" id="password"></label><br>
@@ -50,7 +52,11 @@ const char index_html[] PROGMEM = R"rawliteral(
 <script>
     const ssid = document.getElementById("ssid");
     const password = document.getElementById("password");
-
+    const beatSignal = document.getElementById("beatSignal");
+    beatSignal.onclick = () => {
+        config.beatSignal = beatSignal.checked;
+        Send();
+    }
 
     function Lerp(a, b, t) {
         return a + (b - a) * t;
@@ -61,6 +67,11 @@ const char index_html[] PROGMEM = R"rawliteral(
         UpdateLEDPatterns();
         GetConfig();
         UpdateWifi();
+    }
+
+    function UpdateUI() {
+        beatSignal.checked = config.beatSignal;
+        UpdateLEDPatternUI();
     }
     Init('')
 
@@ -105,7 +116,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             return response.json();
         }).then((data) => {
             config = data;
-            UpdateLEDPatternUI();
+            UpdateUI();
             console.log(data)
         })
     }

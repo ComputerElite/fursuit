@@ -48,6 +48,7 @@ void SetupServer() {
     StaticJsonDocument<256> doc;
     doc["primary"] = primaryAnimation;
     doc["secondary"] = secondaryAnimation;
+    doc["beatSignal"] = applyBeatSignalOntoLEDs;
     String output;
     serializeJson(doc, output);
     request->send(200, "application/json", output);
@@ -58,6 +59,8 @@ void SetupServer() {
     deserializeJson(doc, data, len);
     primaryAnimation = (LEDAnimation)doc["primary"].as<int>();
     secondaryAnimation = (LEDAnimation)doc["secondary"].as<int>();
+    secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
+    applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
     request->send(200);
   });
   // get/set wifi
