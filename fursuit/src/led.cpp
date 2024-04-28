@@ -31,10 +31,6 @@ void SetupLED() {
     
 }
 
-void SetBrightness(int brightness) {
-  SaveBrightness(brightness);
-  brightnessValueInternal = brightness;
-}
 int GetBrightness() {
   return brightnessValueInternal * MAX_BRIGHTNESS / 255;
 }
@@ -49,14 +45,6 @@ double breathsPerSecond1 = 0;
 double breathsLerpFactor = 1;
 
 double breathSecondCounter = 0;
-
-void SetLEDSpeed(double speed) {
-  animationSpeed = speed;
-  SaveLEDSpeed(speed);
-}
-double GetLEDSpeed() {
-  return animationSpeed;
-}
 
 CRGB GetColorBrightness(CRGB color, uint8_t brightness) {
   //return color;

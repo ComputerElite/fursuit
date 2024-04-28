@@ -2,6 +2,8 @@
 #include "wifi.h"
 #include "preferences.h"
 #include "led.h"
+#include <ArduinoJson.h>
+#include "controls.h"
 Preferences prefs;
 
 const char* ns = "Tail";
@@ -23,6 +25,34 @@ void ResetPreferences(bool alsoWifi = false) {
         prefs.remove("ssid");
         prefs.remove("password");
     }
+}
+
+void ApplyConfig(StaticJsonDocument<1024> doc) {
+    primaryAnimation = (LEDAnimation)doc["primary"].as<int>();
+    secondaryAnimation = (LEDAnimation)doc["secondary"].as<int>();
+    secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
+    applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
+    SaveConfig(doc);
+}
+
+void SaveConfig(StaticJsonDocument<1024> doc) {
+    String output;
+    serializeJson(GetConfig(), output);
+    prefs.putString("config", output);
+}
+
+void LoadConfig() {
+    StaticJsonDocument<1024> doc;
+    deserializeJson(doc, prefs.getString("config", "{}"));
+    ApplyConfig(doc);
+}
+
+StaticJsonDocument<1024> GetConfig() {
+    StaticJsonDocument<1024> doc;
+    doc["primary"] = primaryAnimation;
+    doc["secondary"] = secondaryAnimation;
+    doc["beatSignal"] = applyBeatSignalOntoLEDs;
+    return doc;
 }
 
 void SaveBrightness(int brightness) {

@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include "led.h"
 #include "html.h"
-#include "controls.h"
+#include "preferences.h"
 
 AsyncWebServer server(80);
 
@@ -45,22 +45,15 @@ void SetupServer() {
     request->send(200, "application/json", output);
   });
   server.on("/config", HTTP_GET, [](AsyncWebServerRequest *request){
-    StaticJsonDocument<256> doc;
-    doc["primary"] = primaryAnimation;
-    doc["secondary"] = secondaryAnimation;
-    doc["beatSignal"] = applyBeatSignalOntoLEDs;
     String output;
-    serializeJson(doc, output);
+    serializeJson(GetConfig(), output);
     request->send(200, "application/json", output);
   });
   server.on("/config", HTTP_POST, [](AsyncWebServerRequest * request){},NULL,[](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
     if(len < 1) return request->send(400);
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<1024> doc;
     deserializeJson(doc, data, len);
-    primaryAnimation = (LEDAnimation)doc["primary"].as<int>();
-    secondaryAnimation = (LEDAnimation)doc["secondary"].as<int>();
-    secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
-    applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
+    ApplyConfig(doc);
     request->send(200);
   });
   // get/set wifi
