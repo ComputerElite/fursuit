@@ -301,7 +301,7 @@ void UpdateLED() {
   ApplyPrimaryAnimation();
   if(secondaryAnimationEnabled) ApplySecondaryAnimation();
 
-  UpdateStatusLEDs();
+  if(statusLEDsEnabled) UpdateStatusLEDs();
   FastLED.show();
   //RainbowFade();
   return;

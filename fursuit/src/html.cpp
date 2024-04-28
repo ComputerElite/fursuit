@@ -41,8 +41,8 @@ const char index_html[] PROGMEM = R"rawliteral(
   <div class="grid" id="secondary">
 
   </div>
-  <h3>Beat detection</h3>
-  <label><input type="checkbox" id="beatSignal">Beat detection</label>
+  <h3>Other config options</h3>
+  <div id="otherConfig"></div>
   <h3>WiFi</h3>
   <label>SSID<input type="text" id="ssid"></label><br>
   <label>Password<input type="password" id="password"></label><br>
@@ -52,11 +52,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 <script>
     const ssid = document.getElementById("ssid");
     const password = document.getElementById("password");
-    const beatSignal = document.getElementById("beatSignal");
-    beatSignal.onclick = () => {
-        config.beatSignal = beatSignal.checked;
-        Send();
-    }
 
     function Lerp(a, b, t) {
         return a + (b - a) * t;
@@ -70,9 +65,33 @@ const char index_html[] PROGMEM = R"rawliteral(
     }
 
     function UpdateUI() {
-        beatSignal.checked = config.beatSignal;
         UpdateLEDPatternUI();
+        GenerateUI();
     }
+
+    function SetProperty(name, value) {
+        config[name] = value
+        Send();
+        UpdateUI();
+    }
+    
+    function GenerateUI() {
+        var html = ""
+        for(const [key, value] of Object.entries(config)) {
+            if(["primary", "secondary"].includes(key)) continue;
+            html += `
+                <div>
+                    <label for="${key}">${key}</label>
+                    ${typeof value === "number" ? 
+                `<input onchange="SetProperty('${key}', parseFloat(this.value))" type="number" id="${key}" value="${value}">` 
+                : `<input onchange="SetProperty('${key}', ${!value})" type="checkbox" id="${key}" ${value ? `checked` : ``}>`}
+                    
+                </div>
+            `
+        }
+        document.getElementById("otherConfig").innerHTML = html
+    }
+
     Init('')
 
     var ledPatterns = [];

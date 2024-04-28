@@ -27,18 +27,19 @@ void ResetPreferences(bool alsoWifi = false) {
     }
 }
 
+void SaveConfig(StaticJsonDocument<1024> doc) {
+    String output;
+    serializeJson(GetConfig(), output);
+    prefs.putString("config", output);
+}
+
 void ApplyConfig(StaticJsonDocument<1024> doc) {
     primaryAnimation = (LEDAnimation)doc["primary"].as<int>();
     secondaryAnimation = (LEDAnimation)doc["secondary"].as<int>();
     secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
     applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
+    statusLEDsEnabled = doc["statusLEDsEnabled"].as<bool>();
     SaveConfig(doc);
-}
-
-void SaveConfig(StaticJsonDocument<1024> doc) {
-    String output;
-    serializeJson(GetConfig(), output);
-    prefs.putString("config", output);
 }
 
 void LoadConfig() {
@@ -52,6 +53,7 @@ StaticJsonDocument<1024> GetConfig() {
     doc["primary"] = primaryAnimation;
     doc["secondary"] = secondaryAnimation;
     doc["beatSignal"] = applyBeatSignalOntoLEDs;
+    doc["statusLEDsEnabled"] = statusLEDsEnabled;
     return doc;
 }
 
@@ -66,4 +68,5 @@ void LoadPreferences() {
     prefs.begin(ns);
     ssid = prefs.getString("ssid", AP_NAME);
     password = prefs.getString("password", "VerySecure");
+    LoadConfig();
 }
