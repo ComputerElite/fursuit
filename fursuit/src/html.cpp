@@ -42,7 +42,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 
   </div>
   <h3>Beat detection</h3>
-  <label><input type="checkbox" id="beatSignal">Beat detectio</label>
+  <label><input type="checkbox" id="beatSignal">Beat detection</label>
   <h3>WiFi</h3>
   <label>SSID<input type="text" id="ssid"></label><br>
   <label>Password<input type="password" id="password"></label><br>
