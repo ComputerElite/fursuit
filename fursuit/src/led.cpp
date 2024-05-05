@@ -129,15 +129,16 @@ long beatLEDTriggerTime = 0;
 double beatLEDTriggerLength = 0;
 uint8_t beatLEDBrightness = 0;
 void UpdateStatusLEDs() {
+  uint8_t defaultStatusLedBrightness = static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255);
   if(applyBeatSignalOntoLEDs) {
     if(beatSignal) {
       beatLEDTriggerTime = millis();
       beatLEDTriggerLength = isStrongBeat ? 100 : 10;
     }
     beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
-    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
+    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 255, 255), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * beatLEDBrightness));
   } else {
-    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 0, 0), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255));
+    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 0, 0), defaultStatusLedBrightness);
   }
   
   CRGB wifiColor = CRGB(0, 0, 0);
@@ -160,10 +161,10 @@ void UpdateStatusLEDs() {
       break;
   }
   SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +1, wifiColor, wifiBrightness);
-  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +2, CRGB(0,0,0), 0);
-  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +3, CRGB(0,0,0), 0);
-  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +4, CRGB(0,0,0), 0);
-  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +5, CRGB(0,0,0), 0);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +2, combinedLeds[0], defaultStatusLedBrightness);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +3, combinedLeds[1], defaultStatusLedBrightness);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +4, combinedLeds[2], defaultStatusLedBrightness);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +5, combinedLeds[3], defaultStatusLedBrightness);
 }
 
 double brightnessMovementFlashesPrimary = 1;
@@ -247,10 +248,8 @@ void CorrectHead() {
 
   // Preview on staus leds
   for(int i=0; i<STATUS_LED_HEAD_N; i++) {
-    combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX] = combinedLedsShown[i];
+    combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + i] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + i];
   }
-  combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX];
-  combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + 1] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + 1];
 }
 
 void AnimationRainbowStatic(AnimationType type) {
