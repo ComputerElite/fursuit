@@ -26,6 +26,7 @@ int const led_animation_groups[] =
 #undef X
 
 CRGB combinedLeds[N_LEDS];
+CRGB combinedLedsShown[N_LEDS];
 
 void SetupLED() {
     
@@ -134,9 +135,9 @@ void UpdateStatusLEDs() {
       beatLEDTriggerLength = isStrongBeat ? 100 : 10;
     }
     beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
-    SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
+    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 255, 255), beatLEDBrightness);
   } else {
-    SetPixelColor(STATUS_LED_START_INDEX, CRGB(255, 0, 0), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255));
+    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 0, 0), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255));
   }
   
   CRGB wifiColor = CRGB(0, 0, 0);
@@ -158,7 +159,11 @@ void UpdateStatusLEDs() {
       wifiBrightness = static_cast<uint8_t>((lastLoop / 6 % 255) * STATUS_LED_MAX_BRIGHTNESS);
       break;
   }
-  SetPixelColor(STATUS_LED_START_INDEX+1, wifiColor, wifiBrightness);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +1, wifiColor, wifiBrightness);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +2, CRGB(0,0,0), 0);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +3, CRGB(0,0,0), 0);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +4, CRGB(0,0,0), 0);
+  SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +5, CRGB(0,0,0), 0);
 }
 
 double brightnessMovementFlashesPrimary = 1;
@@ -216,11 +221,36 @@ void SetPixelColorWithType(int ledIndex, CRGB desiredColor, double desiredBright
             // they should light up for 30% of the beat length
             movementFlashedLEDStatus[i] = !isStrongBeat && beatSignalTime + 300 / bps >= millis() ? desiredColor : CRGB(0, 0, 0);
           }
-          if(movementFlashedLEDStatus[i].r + movementFlashedLEDStatus[i].g + movementFlashedLEDStatus[i].b > 10) SetPixelColor(i, movementFlashedLEDStatus[i]);
+          if(movementFlashedLEDStatus[i].r + movementFlashedLEDStatus[i].g + movementFlashedLEDStatus[i].b > 10) {
+            SetPixelColor(i, movementFlashedLEDStatus[i]);
+          }
         }
       }
       return;
   }
+}
+
+void CorrectHead() {
+  // Copy tail
+  for(int i = 0; i < TAIL_N_LEDS; i++) {
+    combinedLedsShown[i] = combinedLeds[i];
+  }
+  // Mirror tail to ears
+  for(int i=0; i<HEAD_N_LEDS; i++) {
+    combinedLedsShown[TAIL_N_LEDS +i] = combinedLeds[i];
+  }
+  // Mirror left ear to right ear
+
+  for(int i=0; i<EAR_N_LEDS; i++) {
+    combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS +i];
+  }
+
+  // Preview on staus leds
+  for(int i=0; i<STATUS_LED_HEAD_N; i++) {
+    combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX] = combinedLedsShown[i];
+  }
+  combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX];
+  combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + 1] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + 1];
 }
 
 void AnimationRainbowStatic(AnimationType type) {
@@ -300,8 +330,8 @@ void UpdateLED() {
   PrecomputeBrightnessMultiplier();
   ApplyPrimaryAnimation();
   if(secondaryAnimationEnabled) ApplySecondaryAnimation();
-
   if(statusLEDsEnabled) UpdateStatusLEDs();
+  CorrectHead();
   FastLED.show();
   //RainbowFade();
   return;
