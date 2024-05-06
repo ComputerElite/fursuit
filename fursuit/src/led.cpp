@@ -83,7 +83,7 @@ void SetPixelColor(int pixel, CRGB color) {
   combinedLeds[pixel] = color;
 }
 void SetPixelColor(int pixel, CRGB color, uint8_t brightness) {
-  // sets a pixels color. Ignored if brightness is 0
+  // sets a pixels color
   color = GetColorBrightness(color, brightness);
   color = GetColorBrightness(color, GetBrightness());
   combinedLeds[pixel] = color;
@@ -129,20 +129,20 @@ long beatLEDTriggerTime = 0;
 double beatLEDTriggerLength = 0;
 uint8_t beatLEDBrightness = 0;
 void UpdateStatusLEDs() {
-  uint8_t defaultStatusLedBrightness = static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255);
+  uint8_t defaultStatusLedBrightness = static_cast<uint8_t>(statusLEDBrightness * 255);
   if(applyBeatSignalOntoLEDs) {
     if(beatSignal) {
       beatLEDTriggerTime = millis();
       beatLEDTriggerLength = isStrongBeat ? 100 : 10;
     }
     beatLEDBrightness = millis() > beatLEDTriggerTime + beatLEDTriggerLength ? 0 : 255;
-    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 255, 255), static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * beatLEDBrightness));
+    SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 255, 255), static_cast<uint8_t>(statusLEDBrightness * beatLEDBrightness));
   } else {
     SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX, CRGB(255, 0, 0), defaultStatusLedBrightness);
   }
   
   CRGB wifiColor = CRGB(0, 0, 0);
-  uint8_t wifiBrightness = static_cast<uint8_t>(STATUS_LED_MAX_BRIGHTNESS * 255);
+  uint8_t wifiBrightness = static_cast<uint8_t>(statusLEDBrightness * 255);
   switch(wifiStatusEnum) {
     case WifiStatus::WIFI_CONNECTED:
       wifiColor = CRGB(0, 255, 0);
@@ -150,14 +150,14 @@ void UpdateStatusLEDs() {
       break;
     case WifiStatus::WIFI_CONNECTING:
       wifiColor = CRGB(0, 229, 255);
-      wifiBrightness = static_cast<uint8_t>((lastLoop / 10 % 255) * STATUS_LED_MAX_BRIGHTNESS);
+      wifiBrightness = static_cast<uint8_t>((lastLoop / 10 % 255) * statusLEDBrightness);
       break;
     case WifiStatus::WIFI_AP_OPEN:
       wifiColor = CRGB(255, 255, 0);
       break;
     case WifiStatus::WIFI_CONNECTION_FAILED:
       wifiColor = CRGB(255, 0, 0);
-      wifiBrightness = static_cast<uint8_t>((lastLoop / 6 % 255) * STATUS_LED_MAX_BRIGHTNESS);
+      wifiBrightness = static_cast<uint8_t>((lastLoop / 6 % 255) * statusLEDBrightness);
       break;
   }
   SetPixelColor(TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX +1, wifiColor, wifiBrightness);
@@ -220,7 +220,7 @@ void SetPixelColorWithType(int ledIndex, CRGB desiredColor, double desiredBright
             movementFlashedLEDStatus[i] = movementFlashedLEDStatus[i-1];
           } else {
             // they should light up for 30% of the beat length
-            movementFlashedLEDStatus[i] = !isStrongBeat && beatSignalTime + 300 / bps >= millis() ? desiredColor : CRGB(0, 0, 0);
+            movementFlashedLEDStatus[i] = !isStrongBeat && beatSignalTime + secondaryAnimationLightUpFraction * 1000 / bps >= millis() ? desiredColor : CRGB(0, 0, 0);
           }
           if(movementFlashedLEDStatus[i].r + movementFlashedLEDStatus[i].g + movementFlashedLEDStatus[i].b > 10) {
             SetPixelColor(i, movementFlashedLEDStatus[i]);
@@ -290,9 +290,10 @@ void PrecomputeBrightnessMultiplier() {
   double expectedValue = startValue - sqrt(1 - brightnessMovementFlashesPrimary) * multiplyValue;
   if(expectedValue > 1) expectedValue = 1;
   brightnessMovementFlashesPrimaryFrameBrightness = expectedValue;
-  if(lastLoop - beatSignalTime > 5000) {
+  if(lastLoop - beatSignalTime > msAfterWhichLEDsBrightenOnBeatMode) {
+    
     // after 5 seconds start brightening leds again
-    brightnessMovementFlashesPrimaryFrameBrightness = expectedValue + (lastLoop - beatSignalTime - 5000) / 4000.0;
+    brightnessMovementFlashesPrimaryFrameBrightness = expectedValue + (lastLoop - beatSignalTime - msAfterWhichLEDsBrightenOnBeatMode) / msLEDsTakeToBrightenOnBeatMode;
     if(brightnessMovementFlashesPrimaryFrameBrightness > 1) brightnessMovementFlashesPrimaryFrameBrightness = 1;
   }
 }

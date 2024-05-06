@@ -39,6 +39,10 @@ void ApplyConfig(StaticJsonDocument<1024> doc) {
     secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
     applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
     statusLEDsEnabled = doc["statusLEDsEnabled"].as<bool>();
+    msAfterWhichLEDsBrightenOnBeatMode = doc["msAfterWhichLEDsBrightenOnBeatMode"].as<long>();
+    msLEDsTakeToBrightenOnBeatMode = doc["msLEDsTakeToBrightenOnBeatMode"].as<double>();
+    statusLEDBrightness = doc["statusLEDBrightness"].as<double>();
+    secondaryAnimationLightUpFraction = doc["secondaryAnimationLightUpFraction"].as<double>();
     SaveConfig(doc);
 }
 
@@ -54,6 +58,11 @@ StaticJsonDocument<1024> GetConfig() {
     doc["secondary"] = secondaryAnimation;
     doc["beatSignal"] = applyBeatSignalOntoLEDs;
     doc["statusLEDsEnabled"] = statusLEDsEnabled;
+    doc["msAfterWhichLEDsBrightenOnBeatMode"] = msAfterWhichLEDsBrightenOnBeatMode;
+    doc["msLEDsTakeToBrightenOnBeatMode"] = msLEDsTakeToBrightenOnBeatMode;
+    doc["statusLEDBrightness"] = statusLEDBrightness;
+    doc["secondaryAnimationLightUpFraction"] = secondaryAnimationLightUpFraction;
+
     return doc;
 }
 
