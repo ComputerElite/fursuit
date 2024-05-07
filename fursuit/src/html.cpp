@@ -46,8 +46,12 @@ const char index_html[] PROGMEM = R"rawliteral(
   <h3>WiFi</h3>
   <label>SSID<input type="text" id="ssid"></label><br>
   <label>Password<input type="password" id="password"></label><br>
+  <label>AP SSID<input type="text" id="setupssid"></label><br>
+  <label>AP Password<input type="password" id="setuppassword"></label><br>
   <i id="wifiStatus"></i><br>
   <button onclick="sendWiFi()">Send WiFi</button>
+  <h3>Danger!!!</h3>
+  <button onclick="Reset()">Reset</button>
   
 <script>
     const ssid = document.getElementById("ssid");
@@ -55,6 +59,11 @@ const char index_html[] PROGMEM = R"rawliteral(
 
     function Lerp(a, b, t) {
         return a + (b - a) * t;
+    }
+
+    function Reset() {
+        if(!confirm("Are you sure you want to reset the suit config?")) return;
+        fetch(ip + "/reset")
     }
 
     function Init(urlStart) {
@@ -154,17 +163,22 @@ const char index_html[] PROGMEM = R"rawliteral(
             .then((data) => {
                 ssid.value = data.ssid;
                 password.value = data.password;
+                document.getElementById("setupssid").value = data.setupSSID;
+                document.getElementById("setuppassword").value = data.setupPassword;
                 document.getElementById("wifiStatus").innerText = data.status;
             })
     
     }
 
     function sendWiFi() {
+        if(document.getElementById("setuppassword").value.length < 8) return alert("Password must be at least 8 characters")
         fetch(ip + `/wifi`, {
             method: "POST",
             body: JSON.stringify({
                 ssid: ssid.value,
-                password: password.value
+                password: password.value,
+                setupSSID: document.getElementById("setupssid").value,
+                setupPassword: document.getElementById("setuppassword").value
             })
         })
         alert("WiFi sent. ESP will try to connect to it. Keep your eye out for a new network device. If it fails the setup network will open again.")

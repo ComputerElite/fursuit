@@ -5,8 +5,8 @@
 #include "main.h"
 
 
-const char *setupSSID = AP_NAME;
-const char *setupPassword = "VerySecure";
+String setupSSID = AP_NAME;
+String setupPassword = "VerySecure";
 const char *hostname = "computerelite-tail.local";
 String ssid = AP_NAME;
 String password = "VerySecure";

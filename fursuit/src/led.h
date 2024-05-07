@@ -18,6 +18,8 @@ extern CRGB combinedLedsShown[N_LEDS];
 X(ENUM_START, "Enum start", -1) \
 X(RAINBOW_STATIC, "Rainbow Static", 1) \
 X(RAINBOW_FADE, "Rainbow Fade", 1) \
+X(BISEXUAL, "Bisexual", 1) \
+X(STATIC_WHITE, "Bright White", 2) \
 X(STATIC, "Static red", 2) \
 X(OFF, "Off", 1) \
 X(ENUM_END, "Enum end", -1)
@@ -43,5 +45,3 @@ extern void SetLEDSpeed(double speed);
 extern double GetLEDSpeed();
 extern void UpdateLED();
 extern void SetupLED();
-extern void SetBrightness(int brightness);
-extern int GetBrightness();

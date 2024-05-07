@@ -9,6 +9,7 @@ extern long msAfterWhichLEDsBrightenOnBeatMode;
 extern double msLEDsTakeToBrightenOnBeatMode;
 extern double statusLEDBrightness;
 extern double secondaryAnimationLightUpFraction;
+extern double ledBrightness;
 
 enum AnimationType {
     PRIMARY,

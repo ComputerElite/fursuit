@@ -9,7 +9,6 @@ double hue = 0;
 long animationSetTime = 0;
 double secondsSinceAnimationStart = 0;
 double animationSpeed = 7;
-uint8_t brightnessValueInternal = 255;
 
 #define X(a, name, group) name,
 char const *led_animation_names[] =
@@ -30,10 +29,6 @@ CRGB combinedLedsShown[N_LEDS];
 
 void SetupLED() {
     
-}
-
-int GetBrightness() {
-  return brightnessValueInternal * MAX_BRIGHTNESS / 255;
 }
 
 // animation variabls
@@ -79,13 +74,11 @@ void IncrementHue() {
 }
 
 void SetPixelColor(int pixel, CRGB color) {
-  color = GetColorBrightness(color, GetBrightness());
   combinedLeds[pixel] = color;
 }
 void SetPixelColor(int pixel, CRGB color, uint8_t brightness) {
   // sets a pixels color
   color = GetColorBrightness(color, brightness);
-  color = GetColorBrightness(color, GetBrightness());
   combinedLeds[pixel] = color;
 }
 
@@ -266,9 +259,27 @@ void AnimationRainbowFade(AnimationType type) {
   }
 }
 
+long startHue = 205;
+long endHue = 241;
+
+void AnimationBisexual(AnimationType type) {
+  double perPixel = 255.0 / N_LEDS;
+  for(int i=0; i<N_LEDS; i++) { 
+    long pixelHue = static_cast<long>(GetHueBasedOnAnimationType(type)+ (i * perPixel * (255.0/((endHue - startHue)*2.0)))) % 255;
+    // 205 - 241 and then back
+    long realHue = pixelHue;
+    if(pixelHue < 127) realHue = startHue + static_cast<long>(pixelHue / 127.0 * (endHue - startHue));
+    else realHue = endHue - static_cast<long>((pixelHue - 127)/ 127.0 * (endHue - startHue));
+        
+    SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(realHue), 255, 255), 1.0, type);
+  }
+}
+
+CRGB staticColor = CRGB(255, 0, 0);
+
 void AnimationStatic(AnimationType type) {
   for(int i=0; i<N_LEDS; i++) { 
-    SetPixelColorWithType(i, CRGB(255, 0, 0), 1.0, type);
+    SetPixelColorWithType(i, staticColor, 1.0, type);
   }
 }
 
@@ -307,8 +318,15 @@ void ApplyAnimation(AnimationType type, LEDAnimation animation) {
   case RAINBOW_FADE:
     AnimationRainbowFade(type);
     break;
+  case STATIC_WHITE:
+    staticColor = CRGB(255, 255, 255);
+    AnimationStatic(type);
+    break;
   case STATIC:
     AnimationStatic(type);
+    break;
+  case BISEXUAL:
+    AnimationBisexual(type);
     break;
   default:
     break;

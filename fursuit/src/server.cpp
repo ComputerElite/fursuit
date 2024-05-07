@@ -49,6 +49,10 @@ void SetupServer() {
     serializeJson(GetConfig(), output);
     request->send(200, "application/json", output);
   });
+  server.on("/reset", HTTP_GET, [](AsyncWebServerRequest *request){
+    ResetConfig();
+    request->send(200, "application/json", "Reset successful");
+  });
   server.on("/config", HTTP_POST, [](AsyncWebServerRequest * request){},NULL,[](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
     if(len < 1) return request->send(400);
     StaticJsonDocument<1024> doc;
@@ -58,20 +62,24 @@ void SetupServer() {
   });
   // get/set wifi
   server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request){
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<1024> doc;
     doc["ssid"] = ssid;
     doc["password"] = password;
     doc["status"] = wifiStatus;
+    doc["setupSSID"] = setupSSID;
+    doc["setupPassword"] = setupPassword;
     String output;
     serializeJson(doc, output);
     request->send(200, "application/json", output);
   });
   server.on("/wifi", HTTP_POST, [](AsyncWebServerRequest * request){},NULL,[](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total) {
     if(len < 1) return request->send(400);
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<1024> doc;
     deserializeJson(doc, data, len);
     String newSSID = doc["ssid"].as<String>();
     String newPassword = doc["password"].as<String>();
+    setupSSID = doc["setupSSID"].as<String>();
+    setupPassword = doc["setupPassword"].as<String>();
     SetSSIDAndPassword(newSSID, newPassword);
     request->send(200);
   });

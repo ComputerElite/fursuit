@@ -10,6 +10,9 @@ enum WifiStatus {
 
 extern WifiStatus wifiStatusEnum;
 
+
+extern String setupSSID;
+extern String setupPassword;
 extern void BeginWifi();
 extern void HandleWifi();
 extern void SetSSIDAndPassword(String newSSID, String newPassword);

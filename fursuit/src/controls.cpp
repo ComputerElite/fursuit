@@ -8,3 +8,4 @@ long msAfterWhichLEDsBrightenOnBeatMode = 5000;
 double msLEDsTakeToBrightenOnBeatMode = 4000.0;
 double statusLEDBrightness = 1.0;
 double secondaryAnimationLightUpFraction = 0.3;
+double ledBrightness = 1.0;

@@ -4,6 +4,7 @@
 extern void LoadPreferences();
 extern void SavePreferences();
 extern StaticJsonDocument<1024> GetConfig();
+extern void ResetConfig();
 extern void ApplyConfig(StaticJsonDocument<1024> doc);
 
 extern void  ResetPreferences(bool alsoWifi);
