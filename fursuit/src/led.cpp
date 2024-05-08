@@ -27,20 +27,11 @@ int const led_animation_groups[] =
 CRGB combinedLeds[N_LEDS];
 CRGB combinedLedsShown[N_LEDS];
 
+CRGB currentColor = CRGB(0, 0, 0);
+
 void SetupLED() {
     
 }
-
-// animation variabls
-CRGB currentColor = 0;
-CRGB color0 = 0;
-CRGB color1 = 0;
-double currentBreathsPerSecond = 0;
-double breathsPerSecond0 = 0;
-double breathsPerSecond1 = 0;
-double breathsLerpFactor = 1;
-
-double breathSecondCounter = 0;
 
 CRGB GetColorBrightness(CRGB color, uint8_t brightness) {
   //return color;
@@ -98,24 +89,8 @@ void SetColor(CRGB color) {
   SetAllPixelsNonShow(color);
 }
 
-void Breathe(CRGB color) {
-  breathSecondCounter += deltaTimeSeconds * currentBreathsPerSecond;
-  double brightness = sin(breathSecondCounter * 2*PI) * 0.5 + 0.5;
-  if(brightness < 0) brightness = 0;
-  if(brightness > 1) brightness = 1;
-
-
-  SetAllPixelsNonShow(color, static_cast<uint8_t>(brightness * 255.0));
-}
-
-
-
 void LerpColor0ToColor1() {
   currentColor = LerpColor(color0, color1, secondsSinceAnimationStart);
-}
-
-void LerpBreathsPerSecond0ToBreathsPerSecond1() {
-  currentBreathsPerSecond = Lerp(breathsPerSecond0, breathsPerSecond1, secondsSinceAnimationStart * breathsLerpFactor);
 }
 
 long beatLEDTriggerTime = 0;
@@ -275,11 +250,9 @@ void AnimationBisexual(AnimationType type) {
   }
 }
 
-CRGB staticColor = CRGB(255, 0, 0);
-
-void AnimationStatic(AnimationType type) {
+void AnimationStatic(AnimationType type, CRGB color) {
   for(int i=0; i<N_LEDS; i++) { 
-    SetPixelColorWithType(i, staticColor, 1.0, type);
+    SetPixelColorWithType(i, color, 1.0, type);
   }
 }
 
@@ -319,11 +292,10 @@ void ApplyAnimation(AnimationType type, LEDAnimation animation) {
     AnimationRainbowFade(type);
     break;
   case STATIC_WHITE:
-    staticColor = CRGB(255, 255, 255);
-    AnimationStatic(type);
+    AnimationStatic(type, CRGB(255, 255, 255));
     break;
   case STATIC:
-    AnimationStatic(type);
+    AnimationStatic(type, color0);
     break;
   case BISEXUAL:
     AnimationBisexual(type);

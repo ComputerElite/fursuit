@@ -1,119 +1,144 @@
-<!DOCTYPE HTML><html>
+<!DOCTYPE HTML>
+<html>
+
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    html {
-     font-family: Arial;
-     display: inline-block;
-     margin: 0px auto;
-     text-align: center;
-    }
-    h2 { font-size: 3.0rem; }
-    button {
-        background-color: #195B6A;
-        border: none;
-        color: white;
-        text-decoration: none;
-        margin: 2px;
-        padding: 10px;
-        cursor: pointer;
-    }
-    .enabled {
-        background-color: #4CAF50;
-    }
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-gap: 10px;
-    }
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html {
+            font-family: Arial;
+            display: inline-block;
+            margin: 0px auto;
+            text-align: center;
+        }
 
-  </style>
+        h2 {
+            font-size: 3.0rem;
+        }
+
+        button {
+            background-color: #195B6A;
+            border: none;
+            color: white;
+            text-decoration: none;
+            margin: 2px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .enabled {
+            background-color: #4CAF50;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="/wheel.css">
 </head>
+
 <body>
-  <h2>ESP32 for fursuit</h2>
-  <h3>Primary animation</h3>
-  <div class="grid" id="primary">
+    <h2>ESP32 for fursuit</h2>
+    <h3>Primary animation</h3>
+    <div class="grid" id="primary">
 
-  </div>
-  <h3>Secondary animation</h3>
-  <div class="grid" id="secondary">
+    </div>
+    <h3>Secondary animation</h3>
+    <div class="grid" id="secondary">
 
-  </div>
-  <h3>Other config options</h3>
-  <div id="otherConfig"></div>
-  <h3>WiFi</h3>
-  <label>SSID<input type="text" id="ssid"></label><br>
-  <label>Password<input type="password" id="password"></label><br>
-  <label>AP SSID<input type="text" id="setupssid"></label><br>
-  <label>AP Password<input type="password" id="setuppassword"></label><br>
-  <i id="wifiStatus"></i><br>
-  <button onclick="sendWiFi()">Send WiFi</button>
-  <h3>Danger!!!</h3>
-  <button onclick="Reset()">Reset</button>
-  
-<script>
-    const ssid = document.getElementById("ssid");
-    const password = document.getElementById("password");
+    </div>
+    <div style="display: flex; flex-wrap: nowrap;">
+        <div>
 
-    function Lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
+            <h3>Color 0</h3>
+            <div id="color0">
 
-    function Reset() {
-        if(!confirm("Are you sure you want to reset the suit config?")) return;
-        fetch(ip + "/reset")
-    }
+            </div>
+        </div>
+        <div>
 
-    function Init(urlStart) {
-        ip = urlStart;
-        UpdateLEDPatterns();
-        GetConfig();
-        UpdateWifi();
-    }
+            <h3>Color 1</h3>
+            <div id="color1">
 
-    function UpdateUI() {
-        UpdateLEDPatternUI();
-        GenerateUI();
-    }
+            </div>
+        </div>
+    </div>
+    <h3>Other config options</h3>
+    <div id="otherConfig"></div>
+    <h3>WiFi</h3>
+    <label>SSID<input type="text" id="ssid"></label><br>
+    <label>Password<input type="password" id="password"></label><br>
+    <label>AP SSID<input type="text" id="setupssid"></label><br>
+    <label>AP Password<input type="password" id="setuppassword"></label><br>
+    <i id="wifiStatus"></i><br>
+    <button onclick="sendWiFi()">Send WiFi</button>
+    <h3>Danger!!!</h3>
+    <button onclick="Reset()">Reset</button>
 
-    function SetProperty(name, value) {
-        config[name] = value
-        Send();
-        UpdateUI();
-    }
-    
-    function GenerateUI() {
-        var html = ""
-        for(const [key, value] of Object.entries(config)) {
-            if(["primary", "secondary"].includes(key)) continue;
-            html += `
+    <script>
+        const ssid = document.getElementById("ssid");
+        const password = document.getElementById("password");
+
+        function Lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function Reset() {
+            if (!confirm("Are you sure you want to reset the suit config?")) return;
+            fetch(ip + "/reset")
+        }
+
+        function Init(urlStart) {
+            ip = urlStart;
+            UpdateLEDPatterns();
+            GetConfig();
+            UpdateWifi();
+        }
+
+        function UpdateUI() {
+            UpdateLEDPatternUI();
+            GenerateUI();
+        }
+
+        function SetProperty(name, value) {
+            config[name] = value
+            Send();
+            UpdateUI();
+        }
+
+        function GenerateUI() {
+            var html = ""
+            for (const [key, value] of Object.entries(config)) {
+                if (["primary", "secondary"].includes(key)) continue;
+                html += `
                 <div>
                     <label for="${key}">${key}</label>
-                    ${typeof value === "number" ? 
-                `<input onchange="SetProperty('${key}', parseFloat(this.value))" type="number" id="${key}" value="${value}">` 
-                : `<input onchange="SetProperty('${key}', ${!value})" type="checkbox" id="${key}" ${value ? `checked` : ``}>`}
+                    ${typeof value === "number" ?
+                        `<input onchange="SetProperty('${key}', parseFloat(this.value))" type="number" id="${key}" value="${value}">`
+                        : `<input onchange="SetProperty('${key}', ${!value})" type="checkbox" id="${key}" ${value ? `checked` : ``}>`}
                     
                 </div>
             `
+            }
+            document.getElementById("otherConfig").innerHTML = html
         }
-        document.getElementById("otherConfig").innerHTML = html
-    }
 
-    Init('')
+        Init('')
 
-    var ledPatterns = [];
+        var ledPatterns = [];
 
-    function UpdateLEDPatterns() {
-        fetch(ip + "/ledpatterns").then((response) => {
-            return response.json();
-        }).then((leds) => {
-            ledPatterns = leds
-            UpdateLEDPatternUI();
-        })
-    }
+        function UpdateLEDPatterns() {
+            fetch(ip + "/ledpatterns").then((response) => {
+                return response.json();
+            }).then((leds) => {
+                ledPatterns = leds
+                UpdateLEDPatternUI();
+            })
+        }
 
-    function UpdateLEDPatternUI() {
-        var primaryHtml = ``;
+        function UpdateLEDPatternUI() {
+            var primaryHtml = ``;
             var secondaryHtml = ``;
             ledPatterns.forEach((animation) => {
                 primaryHtml += `<button class="${animation.id == config.primary ? "enabled" : ""}" onclick="SetPrimary(${animation.id})">${animation.name}</button>`
@@ -121,68 +146,111 @@
             })
             document.getElementById("primary").innerHTML = primaryHtml;
             document.getElementById("secondary").innerHTML = secondaryHtml;
-    }
+        }
 
-    function SetPrimary(id) {
-        config.primary = id;
-        Send();
-        UpdateLEDPatternUI();
-    }
+        function SetPrimary(id) {
+            config.primary = id;
+            Send();
+            UpdateLEDPatternUI();
+        }
 
-    function SetSecondary(id) {
-        config.secondary = id;
-        Send();
-        UpdateLEDPatternUI();
-    }
+        function SetSecondary(id) {
+            config.secondary = id;
+            Send();
+            UpdateLEDPatternUI();
+        }
 
 
-    var config = {}
-    function GetConfig() {
-        fetch(ip + "/config").then((response) => {
-            return response.json();
-        }).then((data) => {
-            config = data;
-            UpdateUI();
-            console.log(data)
-        })
-    }
-    function Send() {
-        fetch(ip + "/config", {
-            method: "POST",
-            body: JSON.stringify(config)
-        })
-    }
-
-    function UpdateWifi() {
-        fetch(ip + "/wifi")
-            .then((response) => {
+        var config = {}
+        function GetConfig() {
+            fetch(ip + "/config").then((response) => {
                 return response.json();
+            }).then((data) => {
+                config = data;
+                UpdateUI();
+                console.log(data)
             })
-            .then((data) => {
-                ssid.value = data.ssid;
-                password.value = data.password;
-                document.getElementById("setupssid").value = data.setupSSID;
-                document.getElementById("setuppassword").value = data.setupPassword;
-                document.getElementById("wifiStatus").innerText = data.status;
-            })
-    
-    }
+        }
+        lastSend = 0
 
-    function sendWiFi() {
-        if(document.getElementById("setuppassword").value.length < 8) return alert("Password must be at least 8 characters")
-        fetch(ip + `/wifi`, {
-            method: "POST",
-            body: JSON.stringify({
-                ssid: ssid.value,
-                password: password.value,
-                setupSSID: document.getElementById("setupssid").value,
-                setupPassword: document.getElementById("setuppassword").value
+        function Send() {
+            if (Date.now() - lastSend < 50) return; // make sure to not spam the esp with web requests
+            lastSend = Date.now();
+            fetch(ip + "/config", {
+                method: "POST",
+                body: JSON.stringify(config)
             })
-        })
-        alert("WiFi sent. ESP will try to connect to it. Keep your eye out for a new network device. If it fails the setup network will open again.")
-    }
+        }
 
-    function RGBtoHSV(rgb) {
+        function UpdateWifi() {
+            fetch(ip + "/wifi")
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    ssid.value = data.ssid;
+                    password.value = data.password;
+                    document.getElementById("setupssid").value = data.setupSSID;
+                    document.getElementById("setuppassword").value = data.setupPassword;
+                    document.getElementById("wifiStatus").innerText = data.status;
+                })
+
+        }
+
+        function sendWiFi() {
+            if (document.getElementById("setuppassword").value.length < 8) return alert("Password must be at least 8 characters")
+            fetch(ip + `/wifi`, {
+                method: "POST",
+                body: JSON.stringify({
+                    ssid: ssid.value,
+                    password: password.value,
+                    setupSSID: document.getElementById("setupssid").value,
+                    setupPassword: document.getElementById("setuppassword").value
+                })
+            })
+            alert("WiFi sent. ESP will try to connect to it. Keep your eye out for a new network device. If it fails the setup network will open again.")
+        }
+
+        function SetColor0(color, update = true) {
+            console.log(color);
+            console.log(HSVtoRGB(color.hsv[0], color.hsv[1], color.hsv[2]));
+            var c = HSVtoRGB(color.hsv[0], color.hsv[1], color.hsv[2]);
+            var hex = ((c.r << 16) + (c.g << 8) + c.b).toString(16)
+            if (update) {
+                config.color0 = parseInt(hex, 16);
+                Send();
+            }
+        }
+
+        function SetColor1(color, update = true) {
+            console.log(color);
+            console.log(HSVtoRGB(color.hsv[0], color.hsv[1], color.hsv[2]));
+            var c = HSVtoRGB(color.hsv[0], color.hsv[1], color.hsv[2]);
+            var hex = ((c.r << 16) + (c.g << 8) + c.b).toString(16)
+            if (update) {
+                config.color1 = parseInt(hex, 16);
+                Send();
+            }
+        }
+
+        function AddWheel() {
+            picker0 = new ReinventedColorWheel({
+                appendTo: document.getElementById('color0'),
+                wheelDiameter: 250,
+                wheelThickness: 40,
+                handleDiameter: 35,
+                onChange: SetColor0
+            })
+            picker1 = new ReinventedColorWheel({
+                appendTo: document.getElementById('color1'),
+                wheelDiameter: 250,
+                wheelThickness: 40,
+                handleDiameter: 35,
+                onChange: SetColor1
+            })
+        }
+
+        function RGBtoHSV(rgb) {
             var r = (rgb >> 16) & 255;
             var g = (rgb >> 8) & 255;
             var b = rgb & 255;
@@ -277,7 +345,8 @@
 
             return { r: r, g: g, b: b };
         }
-</script>
+    </script>
+    <script src="/wheel.js" onload="AddWheel()"></script>
 </body>
 
 </html>

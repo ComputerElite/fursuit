@@ -46,8 +46,11 @@ void ApplyConfig(StaticJsonDocument<1024> doc) {
     statusLEDBrightness = doc["statusLEDBrightness"].as<double>();
     secondaryAnimationLightUpFraction = doc["secondaryAnimationLightUpFraction"].as<double>();
     ledBrightness = doc["ledBrightness"].as<double>();
+    color0Int = doc["color0"].as<int>();
+    color1Int = doc["color1"].as<int>();
     if(ledBrightness < 0.0) ledBrightness = 0.0;
     if(ledBrightness > 1.0) ledBrightness = 1.0;
+    color0 = CRGB(color0Int);
     FastLED.setBrightness(static_cast<uint8_t>(ledBrightness * 255));
     SaveConfig(doc);
 }
@@ -63,6 +66,8 @@ void ResetConfig() {
     statusLEDBrightness = 1.0;
     secondaryAnimationLightUpFraction = 0.5;
     ledBrightness = 1.0;
+    color0Int = 0xFF0000;
+    color1Int = 0x00FF00;
     SaveConfig(GetConfig());
 }
 
@@ -84,6 +89,8 @@ StaticJsonDocument<1024> GetConfig() {
     doc["statusLEDBrightness"] = statusLEDBrightness;
     doc["secondaryAnimationLightUpFraction"] = secondaryAnimationLightUpFraction;
     doc["ledBrightness"] = ledBrightness;
+    doc["color0"] = color0Int;
+    doc["color1"] = color1Int;
 
     return doc;
 }

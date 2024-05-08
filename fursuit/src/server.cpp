@@ -31,6 +31,12 @@ void SetupServer() {
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html);
   });
+  server.on("/wheel.js", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", wheelJs);
+  });
+  server.on("/wheel.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/style", wheelCss);
+  });
   server.on("/ledpatterns", HTTP_GET, [](AsyncWebServerRequest *request){
     StaticJsonDocument<2048> doc;
     for (int i = LEDAnimation::ENUM_START + 1; i < LEDAnimation::ENUM_END; ++i)
