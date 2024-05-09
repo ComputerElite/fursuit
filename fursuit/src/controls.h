@@ -15,6 +15,19 @@ extern CRGB color0;
 extern int color1Int;
 extern CRGB color1;
 
+enum EarMode {
+    COPY_TAIL,
+    MIRROR_LEFT_EAR,
+    MIRROR_RIGHT_EAR,
+    COPY_ORG_LEFT_EAR,
+    COPY_ORG_RIGHT_EAR,
+};
+
+extern EarMode leftEarMode;
+extern EarMode rightEarMode;
+
+
+
 enum AnimationType {
     PRIMARY,
     SECONDARY

@@ -51,6 +51,7 @@ void ApplyConfig(StaticJsonDocument<1024> doc) {
     if(ledBrightness < 0.0) ledBrightness = 0.0;
     if(ledBrightness > 1.0) ledBrightness = 1.0;
     color0 = CRGB(color0Int);
+    color1 = CRGB(color1Int);
     FastLED.setBrightness(static_cast<uint8_t>(ledBrightness * 255));
     SaveConfig(doc);
 }

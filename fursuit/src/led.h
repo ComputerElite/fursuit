@@ -21,7 +21,8 @@ X(RAINBOW_FADE, "Rainbow Fade", 1) \
 X(BISEXUAL, "Bisexual", 1) \
 X(STATIC_WHITE, "Bright White", 2) \
 X(STATIC, "Static color", 2) \
-X(OFF, "Off", 3) \
+X(CIRCLE, "Circle", 3) \
+X(OFF, "Off", 4) \
 X(ENUM_END, "Enum end", -1)
 
 #define X(a, name, group) a,

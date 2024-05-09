@@ -45,6 +45,7 @@ CRGB GetColorBrightness(CRGB color, uint8_t brightness) {
 
 CRGB LerpColor(CRGB color1, CRGB color2, double percentage) {
   if(percentage > 1) percentage = 1;
+  if(percentage < 0) percentage = 0;
   return CRGB(color1.r + (color2.r - color1.r) * percentage,
               color1.g + (color2.g - color1.g) * percentage, 
               color1.b + (color2.b - color1.b) * percentage);
@@ -198,23 +199,71 @@ void SetPixelColorWithType(int ledIndex, CRGB desiredColor, double desiredBright
       return;
   }
 }
+EarMode currentLeftEarMode = EarMode::COPY_TAIL;
+EarMode currentRightEarMode = EarMode::MIRROR_LEFT_EAR;
 
 void CorrectHead() {
   // Copy tail
   for(int i = 0; i < TAIL_N_LEDS; i++) {
     combinedLedsShown[i] = combinedLeds[i];
   }
-  // Mirror tail to ears
-  for(int i=0; i<HEAD_N_LEDS; i++) {
-    combinedLedsShown[TAIL_N_LEDS +i] = combinedLeds[i];
+  switch(currentLeftEarMode) {
+    case EarMode::COPY_TAIL:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + i] = combinedLeds[i];
+      }
+      break;
+    case EarMode::COPY_ORG_LEFT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + i] = combinedLeds[TAIL_N_LEDS + i];
+      }
+      break;
+    case EarMode::COPY_ORG_RIGHT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + i] = combinedLeds[TAIL_N_LEDS + EAR_N_LEDS + i];
+      }
+      break;
+    case EarMode::MIRROR_LEFT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS + i];
+      }
+      break;
+    case EarMode::MIRROR_RIGHT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i];
+      }
+      break;
   }
   // Mirror left ear to right ear
-
-  for(int i=0; i<EAR_N_LEDS; i++) {
-    combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS +i];
+  switch(currentRightEarMode) {
+    case EarMode::COPY_TAIL:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLeds[i];
+      }
+      break;
+    case EarMode::COPY_ORG_LEFT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLeds[TAIL_N_LEDS + i];
+      }
+      break;
+    case EarMode::COPY_ORG_RIGHT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLeds[TAIL_N_LEDS + EAR_N_LEDS + i];
+      }
+      break;
+    case EarMode::MIRROR_LEFT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS + i];
+      }
+      break;
+    case EarMode::MIRROR_RIGHT_EAR:
+      for(int i=0; i<EAR_N_LEDS; i++) {
+        combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i] = combinedLedsShown[TAIL_N_LEDS + EAR_N_LEDS + i];
+      }
+      break;
   }
 
-  // Preview on staus leds
+  // Preview on status leds
   for(int i=0; i<STATUS_LED_HEAD_N; i++) {
     combinedLedsShown[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + i] = combinedLeds[TAIL_N_LEDS + STATUS_LED_HEAD_START_INDEX + i];
   }
@@ -225,12 +274,15 @@ void AnimationRainbowStatic(AnimationType type) {
     SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(GetHueBasedOnAnimationType(type)), 255, 255), 1.0, type);
   }
 }
+double perPixel = 255.0 / N_LEDS;
+
+long getPixelHue(AnimationType type, int i) {
+  return static_cast<long>(GetHueBasedOnAnimationType(type)+ (i * perPixel)) % 255;
+}
 
 void AnimationRainbowFade(AnimationType type) {
-  double perPixel = 255.0 / N_LEDS;
   for(int i=0; i<N_LEDS; i++) { 
-    long pixelHue = static_cast<long>(GetHueBasedOnAnimationType(type)+ (i * perPixel)) % 255;
-    SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(pixelHue), 255, 255), 1.0, type);
+    SetPixelColorWithType(i, CHSV(static_cast<uint8_t>(getPixelHue(type, i)), 255, 255), 1.0, type);
   }
 }
 
@@ -238,7 +290,6 @@ long startHue = 205;
 long endHue = 241;
 
 void AnimationBisexual(AnimationType type) {
-  double perPixel = 255.0 / N_LEDS;
   for(int i=0; i<N_LEDS; i++) { 
     long pixelHue = static_cast<long>(GetHueBasedOnAnimationType(type)+ (i * perPixel * (255.0/((endHue - startHue)*2.0)))) % 255;
     // 205 - 241 and then back
@@ -282,6 +333,55 @@ void PrecomputeBrightnessMultiplier() {
   }
 }
 
+struct Vector2
+{
+  float x;
+  float y;
+};
+
+Vector2 GetCoordinateOfIndex(int index) {
+  // 11x4 grid
+  Vector2 result;
+  result.x = (index / 11)-1.5f;
+  result.y = (index % 11)-5.5f;
+  if(index >= 11 && index < 22 || index >= 33 && index < 44) {
+    result.y *= -1.0f;
+  }
+  return result;
+}
+
+void Circle(AnimationType type, CRGB colorA, CRGB colorB) {
+  double angle = std::fmod(GetHueBasedOnAnimationType(type) / 255.0 * 2 * PI*5, 2.0*PI);
+  // map hue to index
+  //int led = GetHueBasedOnAnimationType(type) / 255.0 * EAR_N_LEDS;
+  //SetPixelColorWithType(led + , CHSV(static_cast<uint8_t>(GetHueBasedOnAnimationType(type)), 255, 255), 1.0, type);
+  //return;
+  for(int i=0; i<TAIL_N_LEDS; i++) {
+    SetPixelColorWithType(i, LerpColor(colorA, colorB, 1 - abs((getPixelHue(type, i) / 255.0) * 2 - 1)), 1.0, type);
+  }
+  for(int i=0; i<EAR_N_LEDS; i++) {
+    // Based on angle light up le
+    Vector2 coord = GetCoordinateOfIndex(i);
+    float angleOfCoord = atan2(coord.y, coord.x) + PI;
+    float diff = angle - angleOfCoord;
+    if(diff < 0) diff += 2*PI;
+    double brightness = 0.0;
+    if(diff < PI+0.5) {
+      double d = diff - PI;
+      brightness = 0.0;
+      brightness = 1.0;
+      if(d > 0) {
+        brightness = 1.0 - d / 0.5;
+      }
+      if(diff < 0.5) {
+        brightness = 0 + diff / 0.5;
+      }
+    }
+    SetPixelColorWithType(i+TAIL_N_LEDS, LerpColor(colorA, colorB, brightness), 1.0, type);
+
+  }
+}
+
 void ApplyAnimation(AnimationType type, LEDAnimation animation) {
   switch (animation)
   {
@@ -300,6 +400,11 @@ void ApplyAnimation(AnimationType type, LEDAnimation animation) {
   case BISEXUAL:
     AnimationBisexual(type);
     break;
+  case CIRCLE:
+    currentLeftEarMode = EarMode::COPY_ORG_LEFT_EAR;
+    currentRightEarMode = EarMode::MIRROR_LEFT_EAR;
+    Circle(type, color0, color1);
+    break;
   default:
     break;
   }
@@ -315,6 +420,8 @@ void ApplySecondaryAnimation() {
 
 
 void UpdateLED() {
+  currentLeftEarMode = leftEarMode;
+  currentRightEarMode = rightEarMode;
   SetAllPixelsNonShow(CRGB(0, 0, 0)); // reset strip
   IncrementHue(); // Increment hue each frame
   PrecomputeBrightnessMultiplier();

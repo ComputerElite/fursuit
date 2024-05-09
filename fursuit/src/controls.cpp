@@ -1,4 +1,5 @@
 #include "led.h"
+#include "controls.h"
 bool applyBeatSignalOntoLEDs = true;
 LEDAnimation primaryAnimation = RAINBOW_FADE;
 LEDAnimation secondaryAnimation = RAINBOW_STATIC;
@@ -13,3 +14,6 @@ int color0Int = 0xFF0000;
 CRGB color0 = CRGB::Red;
 int color1Int = 0x00FF00;
 CRGB color1 = CRGB::Green;
+
+EarMode leftEarMode = EarMode::COPY_TAIL;
+EarMode rightEarMode = EarMode::MIRROR_LEFT_EAR;
