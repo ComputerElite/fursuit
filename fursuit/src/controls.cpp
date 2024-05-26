@@ -17,3 +17,17 @@ CRGB color1 = CRGB::Green;
 
 EarMode leftEarMode = EarMode::COPY_TAIL;
 EarMode rightEarMode = EarMode::MIRROR_LEFT_EAR;
+
+#define X(a, name, group) name,
+char const *ear_mode_names[] =
+{
+    EAR_MODE
+};
+#undef X
+
+#define X(a, name, group) group,
+int const ear_mode_groups[] =
+{
+    EAR_MODE
+};
+#undef X

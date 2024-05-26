@@ -1,6 +1,6 @@
 #include "html.h"
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML>
+    <!DOCTYPE HTML>
 <html>
 
 <head>
@@ -66,6 +66,22 @@ const char index_html[] PROGMEM = R"rawliteral(
             </div>
         </div>
     </div>
+    <div style="display: flex; flex-wrap: nowrap;">
+        <div>
+
+            <h3>Left Ear mode</h3>
+            <div id="learmode">
+
+            </div>
+        </div>
+        <div>
+
+            <h3>Right ear mode</h3>
+            <div id="rearmode">
+
+            </div>
+        </div>
+    </div>
     <h3>Other config options</h3>
     <div id="otherConfig"></div>
     <h3>WiFi</h3>
@@ -94,6 +110,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         function Init(urlStart) {
             ip = urlStart;
             UpdateLEDPatterns();
+            UpdateEarModes();
             GetConfig();
             UpdateWifi();
         }
@@ -129,6 +146,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         Init('')
 
         var ledPatterns = [];
+        var earModes = [];
 
         function UpdateLEDPatterns() {
             fetch(ip + "/ledpatterns").then((response) => {
@@ -136,6 +154,15 @@ const char index_html[] PROGMEM = R"rawliteral(
             }).then((leds) => {
                 ledPatterns = leds
                 UpdateLEDPatternUI();
+            })
+        }
+
+        function UpdateEarModes() {
+            fetch(ip + "/earmodes").then((response) => {
+                return response.json();
+            }).then((ears) => {
+                earModes = ears
+                UpdateEarModeUI();
             })
         }
 
@@ -148,6 +175,29 @@ const char index_html[] PROGMEM = R"rawliteral(
             })
             document.getElementById("primary").innerHTML = primaryHtml;
             document.getElementById("secondary").innerHTML = secondaryHtml;
+        }
+
+        function UpdateEarModeUI() {
+            var leftHtml = ``;
+            var rightHtml = ``;
+            earModes.forEach((animation) => {
+                leftHtml += `<button class="${animation.id == config.leftEarMode ? "enabled" : ""}" onclick="SetLeftEarMode(${animation.id})">${animation.name}</button>`
+                rightHtml += `<button class="${animation.id == config.rightEarMode ? "enabled" : ""}" onclick="SetRightEarMode(${animation.id})">${animation.name}</button>`
+            })
+            document.getElementById("rearmode").innerHTML = rightHtml;
+            document.getElementById("learmode").innerHTML = leftHtml;
+        }
+
+        function SetLeftEarMode(id) {
+            config.leftEarMode = id;
+            Send();
+            UpdateEarModeUI();
+        }
+
+        function SetRightEarMode(id) {
+            config.rightEarMode = id;
+            Send();
+            UpdateEarModeUI();
         }
 
         function SetPrimary(id) {

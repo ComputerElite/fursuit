@@ -8,6 +8,7 @@
 #include "led.h"
 #include "html.h"
 #include "preferences.h"
+#include "controls.h"
 
 AsyncWebServer server(80);
 
@@ -45,6 +46,19 @@ void SetupServer() {
       pattern["id"] = i;
       pattern["name"] = led_animation_names[i];
       pattern["group"] = led_animation_groups[i];
+    }
+    String output;
+    serializeJson(doc, output);
+    request->send(200, "application/json", output);
+  });
+  server.on("/earmodes", HTTP_GET, [](AsyncWebServerRequest *request){
+    StaticJsonDocument<2048> doc;
+    for (int i = EarMode::EAR_MODE_ENUM_START + 1; i < EarMode::EAR_MODE_ENUM_END; ++i)
+    {
+      JsonObject pattern = doc.createNestedObject();
+      pattern["id"] = i;
+      pattern["name"] = ear_mode_names[i];
+      pattern["group"] = ear_mode_groups[i];
     }
     String output;
     serializeJson(doc, output);

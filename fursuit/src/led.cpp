@@ -203,10 +203,12 @@ EarMode currentLeftEarMode = EarMode::COPY_TAIL;
 EarMode currentRightEarMode = EarMode::MIRROR_LEFT_EAR;
 
 void CorrectHead() {
+   // Copy the animation onto the real strip with the correct mapping based on settings
   // Copy tail
   for(int i = 0; i < TAIL_N_LEDS; i++) {
     combinedLedsShown[i] = combinedLeds[i];
   }
+  // Left ear
   switch(currentLeftEarMode) {
     case EarMode::COPY_TAIL:
       for(int i=0; i<EAR_N_LEDS; i++) {
@@ -234,7 +236,7 @@ void CorrectHead() {
       }
       break;
   }
-  // Mirror left ear to right ear
+  // Right ear
   switch(currentRightEarMode) {
     case EarMode::COPY_TAIL:
       for(int i=0; i<EAR_N_LEDS; i++) {
@@ -350,14 +352,19 @@ Vector2 GetCoordinateOfIndex(int index) {
   return result;
 }
 
+/*
+  Bounce between colorA and colorB based on hue
+*/
+CRGB BounceLerp(AnimationType type, int i, CRGB colorA, CRGB colorB) {
+  return LerpColor(colorA, colorB, 1 - abs((getPixelHue(type, i) / 255.0) * 2 - 1));
+}
+
 void Circle(AnimationType type, CRGB colorA, CRGB colorB) {
+  // Get angle of the seperation
   double angle = std::fmod(GetHueBasedOnAnimationType(type) / 255.0 * 2 * PI*5, 2.0*PI);
-  // map hue to index
-  //int led = GetHueBasedOnAnimationType(type) / 255.0 * EAR_N_LEDS;
-  //SetPixelColorWithType(led + , CHSV(static_cast<uint8_t>(GetHueBasedOnAnimationType(type)), 255, 255), 1.0, type);
-  //return;
+  // Tail gets a blend between colorA and colorB based on hue
   for(int i=0; i<TAIL_N_LEDS; i++) {
-    SetPixelColorWithType(i, LerpColor(colorA, colorB, 1 - abs((getPixelHue(type, i) / 255.0) * 2 - 1)), 1.0, type);
+    SetPixelColorWithType(i, BounceLerp(type, i, colorA, colorB), 1.0, type);
   }
   for(int i=0; i<EAR_N_LEDS; i++) {
     // Based on angle light up le
@@ -430,6 +437,5 @@ void UpdateLED() {
   if(statusLEDsEnabled) UpdateStatusLEDs();
   CorrectHead();
   FastLED.show();
-  //RainbowFade();
   return;
 }
