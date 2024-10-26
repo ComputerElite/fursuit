@@ -18,6 +18,8 @@ long inAirStartSignalTime = 0; // time we've just started being in the in ms
 
 bool inAirMiddleSignal = false; // signal that we're in the middle of being in the air (approximated based on last signals)
 
+long magicJumpNumber = 150;// magic number for in air start offset an actual jump beginning
+
 
 bool inAirEndSignal = false; // signal that we've just stopped being in the air this update
 long inAirEndSignalTime = 0; // time we've just stopped being in the in ms
@@ -182,8 +184,9 @@ void UpdateVariables() {
 
   // Trigger beat signal
   beatSignal = false;
-  nextBeatTime = inAirStartSignalTime + inAirSignalTime / 2 + avgJumpLength / 2;
+  nextBeatTime = inAirStartSignalTime + avgJumpLength - magicJumpNumber;
   if(nextBeatTime <= correctedTime && !toggledBeatSignal) {
+  //if(accelerationMagnitude > 1.3 && !toggledBeatSignal) {
     toggledBeatSignal = true;
     isStrongBeat ^= true;
     beatSignal = true;

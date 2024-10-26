@@ -389,6 +389,21 @@ void Circle(AnimationType type, CRGB colorA, CRGB colorB) {
   }
 }
 
+long lastBlink = 0;
+bool lastBlinkState = false;
+
+void AnimationTurnLeftEar(AnimationType type) {
+  long diff = lastLoop - lastBlink;
+  Serial.println(diff);
+  if(diff > 500) {
+    lastBlink = lastLoop;
+    lastBlinkState = !lastBlinkState;
+  }
+  for(int i=0; i<EAR_N_LEDS; i++) {
+    SetPixelColorWithType(TAIL_N_LEDS + i, CRGB(255, 191, 0), lastBlinkState ? 0 : 1, type);
+  }
+}
+
 void ApplyAnimation(AnimationType type, LEDAnimation animation) {
   switch (animation)
   {
@@ -411,6 +426,21 @@ void ApplyAnimation(AnimationType type, LEDAnimation animation) {
     currentLeftEarMode = EarMode::COPY_ORG_LEFT_EAR;
     currentRightEarMode = EarMode::MIRROR_LEFT_EAR;
     Circle(type, color0, color1);
+    break;
+  case TURN_LEFT:
+    currentLeftEarMode = EarMode::COPY_ORG_LEFT_EAR;
+    currentRightEarMode = EarMode::COPY_ORG_RIGHT_EAR;
+    AnimationTurnLeftEar(type);
+    break;
+  case TURN_RIGHT:
+    currentRightEarMode = EarMode::COPY_ORG_LEFT_EAR;
+    currentLeftEarMode = EarMode::COPY_ORG_RIGHT_EAR;
+    AnimationTurnLeftEar(type);
+    break;
+  case DANGER_LIGHT:
+    currentLeftEarMode = EarMode::COPY_ORG_LEFT_EAR;
+    currentRightEarMode = EarMode::MIRROR_LEFT_EAR;
+    AnimationTurnLeftEar(type);
     break;
   default:
     break;

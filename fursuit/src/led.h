@@ -22,6 +22,9 @@ X(BISEXUAL, "Bisexual", 1) \
 X(STATIC_WHITE, "Bright White", 2) \
 X(STATIC, "Static color", 2) \
 X(CIRCLE, "Circle", 3) \
+X(TURN_LEFT, "Turn left", 3) \
+X(TURN_RIGHT, "Turn right", 3) \
+X(DANGER_LIGHT, "Danger light", 3) \
 X(OFF, "Off", 4) \
 X(ENUM_END, "Enum end", -1)
 
