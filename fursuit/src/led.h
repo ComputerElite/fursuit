@@ -1,7 +1,7 @@
 #include <FastLED.h>
 #define TAIL_LED_PIN 16
-#define TAIL_N_LEDS 47
-#define HEAD_LED_PIN 17
+#define TAIL_N_LEDS 15
+#define HEAD_LED_PIN 25
 #define EAR_N_LEDS 44
 #define STATUS_LED_HEAD_N 6
 #define HEAD_N_LEDS (EAR_N_LEDS + EAR_N_LEDS + STATUS_LED_HEAD_N)

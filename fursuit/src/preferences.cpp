@@ -29,7 +29,7 @@ void ResetPreferences(bool alsoWifi = false) {
     }
 }
 
-void SaveConfig(StaticJsonDocument<1024> doc) {
+void SaveConfig() {
     String output;
     serializeJson(GetConfig(), output);
     prefs.putString("config", output);
@@ -54,8 +54,14 @@ void ApplyConfig(StaticJsonDocument<1024> doc) {
     if(ledBrightness > 1.0) ledBrightness = 1.0;
     color0 = CRGB(color0Int);
     color1 = CRGB(color1Int);
+    SaveConfig();
+}
+
+/// @brief 
+/// @param ledBrightness from 0-1
+void UpdateLEDBrightness(double b) {
+    ledBrightness =b;
     FastLED.setBrightness(static_cast<uint8_t>(ledBrightness * 255));
-    SaveConfig(doc);
 }
 
 void ResetConfig() {
@@ -73,7 +79,7 @@ void ResetConfig() {
     color1Int = 0x00FF00;
     rightEarMode = EarMode::COPY_TAIL;
     leftEarMode = EarMode::MIRROR_LEFT_EAR;
-    SaveConfig(GetConfig());
+    SaveConfig();
 }
 
 void LoadConfig() {
