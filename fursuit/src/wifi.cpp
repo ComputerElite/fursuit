@@ -132,6 +132,7 @@ void HandleWifi() {
             isTryingToConnectToNewNetwork = false;
             wifiStatus = "WiFi connected!";
             Serial.println("WiFi connected");
+            Serial.println(WiFi.localIP());
             attempt = 0;
             wifiStatusEnum = WifiStatus::WIFI_CONNECTED;
         }

@@ -1,5 +1,7 @@
 #include "imu.h"
 #include "main.h"
+#include "server.h"
+#include "LowPassFilter.hpp"
 #include <vector>
 
 DFRobot_BMI160 bmi160;
@@ -41,7 +43,11 @@ bool isStrongBeat = false;
 long nextBeatTime = 0;
 long beatSignalTime = 0;
 
-double accelerationMagnitude = 0; // magnitude of the acceleration
+double accelerationMagnitudeRaw = 0; // magnitude of the acceleration
+double accelerationMagnitude = 0; // magnitude of the acceleration (low pass filtered)
+
+
+LowPassFilter lpf = LowPassFilter(4, 0.24);
 
 void InitIMU() {
     if (bmi160.softReset() != BMI160_OK){
@@ -56,12 +62,37 @@ void InitIMU() {
     }
     //BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr);
 }
+char concatinated[100] ="";
 
+void AppendDouble(double value) {
+  std::string s = std::to_string(value);
+  char *tmp = new char[s.length() + 1];
+  s.copy(tmp, s.length());
+  tmp[s.length()] = '\0';
+  strcat(concatinated, tmp);
+}
+
+void AppendLong(long value) {
+  std::string s = std::to_string(value);
+  char *tmp = new char[s.length() + 1];
+  s.copy(tmp, s.length());
+  tmp[s.length()] = '\0';
+  strcat(concatinated, tmp);
+}
 bool ReadIMU() {
+  concatinated[0] = '\0';
+  strcat(concatinated, "t");
+  AppendLong(millis());
   rslt = bmi160.getAccelData(accel);
+  strcat(concatinated, " x");
+  AppendDouble(accel[0]/16384.0);
+  strcat(concatinated, " y");
+  AppendDouble(accel[1]/16384.0);
+  strcat(concatinated, " z");
+  AppendDouble(accel[2]/16384.0);
   if(serialOn) {
     Serial.print("x");
-    Serial.println(accel[0]/16384.0);
+    Serial.println();
     Serial.print("y");
     Serial.println(accel[1]/16384.0);
     Serial.print("z");
@@ -77,9 +108,10 @@ long correctedTime = 0;
 
 void UpdateVariables() {
   // Record whether or not we're in the air according to the measurement
-  inAirRaw = accelerationMagnitude < 0.7;
+  inAirRaw = accelerationMagnitude > 0.2;
   correctedTime = millis();
-
+  strcat(concatinated, " a");
+  AppendDouble(accelerationMagnitude);
   if(serialOn) {
     //Serial.print("t");
     //Serial.println(correctedTime);
@@ -120,6 +152,7 @@ void UpdateVariables() {
       jumpLengths.push_back(currentJumpLength);
       inAirStartSignalTime = timeOfFirstInAirMeasurement;
       inAirStartSignal = true;
+      strcat(concatinated, " s");
 
       if(serialOn) {
         //Serial.print("t");
@@ -139,6 +172,7 @@ void UpdateVariables() {
     if(!toggledInAirEndSignal) {
       inAirEndSignalTime = timeOfFirstNotInAirMeasurement;
       inAirEndSignal = true;
+      strcat(concatinated, " e");
       if(serialOn) {
         //Serial.print("t");
         //Serial.println(timeOfFirstInAirMeasurement);
@@ -158,6 +192,7 @@ void UpdateVariables() {
     if(inAirStartSignalTime + inAirSignalTime/2 <= correctedTime && !toggledInAirMiddleSignal) {
       inAirMiddleSignal = true;
       toggledInAirMiddleSignal = true;
+      strcat(concatinated, " a");
       if(serialOn) {
         //Serial.print("t");
         //Serial.println(inAirStartSignalTime + inAirSignalTime/2);
@@ -191,6 +226,8 @@ void UpdateVariables() {
     isStrongBeat ^= true;
     beatSignal = true;
     beatSignalTime = nextBeatTime;
+    strcat(concatinated, " b");
+    AppendDouble(bpm);
     if(serialOn) {
       //Serial.print("t");
       //Serial.println(nextBeatTime);
@@ -199,6 +236,11 @@ void UpdateVariables() {
     }
   }
 
+  //Serial.println(concatinated);
+
+  strcat(concatinated, " u");
+  AppendDouble(deltaTimeSeconds);
+  sendMessageToAllWSClients(concatinated);
 }
 
 void UpdateIMU() {
@@ -208,7 +250,13 @@ void UpdateIMU() {
   //parameter accelGyro is the pointer to store the data
   if(rslt == 0){
     // magnitude
-    accelerationMagnitude = sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2])/16384.0;
+    accelerationMagnitudeRaw = sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2])/16384.0 - 1; // make laying on the floor 0
+    accelerationMagnitude = lpf.update(accelerationMagnitudeRaw, deltaTimeSeconds, 4);
+    if(isnan(accelerationMagnitude)) {
+      lpf = LowPassFilter(4, deltaTimeSeconds);
+      // use raw data for this time
+      accelerationMagnitude = accelerationMagnitudeRaw; // make laying on the floor 0
+    }
   }else{
     Serial.println("err");
   }

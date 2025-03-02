@@ -12,7 +12,7 @@ bool serialOn = false;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600); // initialize Serial communication
+  Serial.begin(8900); // initialize Serial communication
   FastLED.addLeds<NEOPIXEL, TAIL_LED_PIN>(combinedLedsShown, TAIL_N_LEDS);
   FastLED.addLeds<NEOPIXEL, HEAD_LED_PIN>(combinedLedsShown, TAIL_N_LEDS, HEAD_N_LEDS);
   //Scanner();
