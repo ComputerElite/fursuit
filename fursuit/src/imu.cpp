@@ -112,6 +112,8 @@ void UpdateVariables() {
   correctedTime = millis();
   strcat(concatinated, " a");
   AppendDouble(accelerationMagnitude);
+  strcat(concatinated, " r");
+  AppendDouble(accelerationMagnitudeRaw);
   if(serialOn) {
     //Serial.print("t");
     //Serial.println(correctedTime);
@@ -240,7 +242,6 @@ void UpdateVariables() {
 
   strcat(concatinated, " u");
   AppendDouble(deltaTimeSeconds);
-  sendMessageToAllWSClients(concatinated);
 }
 
 void UpdateIMU() {
@@ -252,7 +253,7 @@ void UpdateIMU() {
     // magnitude
     accelerationMagnitudeRaw = sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2])/16384.0 - 1; // make laying on the floor 0
     accelerationMagnitude = lpf.update(accelerationMagnitudeRaw, deltaTimeSeconds, 4);
-    if(isnan(accelerationMagnitude)) {
+    if(isnan(accelerationMagnitude) || accelerationMagnitude == 0) {
       lpf = LowPassFilter(4, deltaTimeSeconds);
       // use raw data for this time
       accelerationMagnitude = accelerationMagnitudeRaw; // make laying on the floor 0

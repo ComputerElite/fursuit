@@ -10,6 +10,7 @@ extern bool beatSignal;
 extern bool isStrongBeat;
 extern int timesNotInAir;
 extern int timeInAir;
+extern char concatinated[];
 extern long beatSignalTime;
 extern double bps;
 extern double bpm;

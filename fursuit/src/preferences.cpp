@@ -41,6 +41,7 @@ void ApplyConfig(StaticJsonDocument<1024> doc) {
     secondaryAnimationEnabled = secondaryAnimation != LEDAnimation::OFF;
     applyBeatSignalOntoLEDs = doc["beatSignal"].as<bool>();
     statusLEDsEnabled = doc["statusLEDsEnabled"].as<bool>();
+    wsEnabled = doc["wsEnabled"].as<bool>();
     msAfterWhichLEDsBrightenOnBeatMode = doc["msAfterWhichLEDsBrightenOnBeatMode"].as<long>();
     msLEDsTakeToBrightenOnBeatMode = doc["msLEDsTakeToBrightenOnBeatMode"].as<double>();
     statusLEDBrightness = doc["statusLEDBrightness"].as<double>();
@@ -62,6 +63,7 @@ void ResetConfig() {
     primaryAnimation = LEDAnimation::RAINBOW_FADE;
     secondaryAnimation = LEDAnimation::RAINBOW_FADE;
     secondaryAnimationEnabled = true;
+    wsEnabled = true;
     applyBeatSignalOntoLEDs = true;
     statusLEDsEnabled = true;
     msAfterWhichLEDsBrightenOnBeatMode = 5000;
@@ -88,6 +90,7 @@ StaticJsonDocument<1024> GetConfig() {
     doc["primary"] = primaryAnimation;
     doc["secondary"] = secondaryAnimation;
     doc["beatSignal"] = applyBeatSignalOntoLEDs;
+    doc["wsEnabled"] = wsEnabled;
     doc["statusLEDsEnabled"] = statusLEDsEnabled;
     doc["msAfterWhichLEDsBrightenOnBeatMode"] = msAfterWhichLEDsBrightenOnBeatMode;
     doc["msLEDsTakeToBrightenOnBeatMode"] = msLEDsTakeToBrightenOnBeatMode;

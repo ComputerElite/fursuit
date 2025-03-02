@@ -4,6 +4,7 @@
 #include "wifi.h"
 #include "server.h"
 #include "preferences.h"
+#include "controls.h"
 
 double deltaTimeSeconds = 0;
 long deltaTime = 0;
@@ -35,6 +36,7 @@ void loop() {
   }
   // put your main code here, to run repeatedly:
   UpdateIMU();
+  if(wsEnabled) sendMessageToAllWSClients(concatinated);
   UpdateLED();
   HandleWifi();
 }

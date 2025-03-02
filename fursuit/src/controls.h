@@ -5,6 +5,7 @@ extern LEDAnimation primaryAnimation;
 extern LEDAnimation secondaryAnimation;
 extern bool secondaryAnimationEnabled;
 extern bool statusLEDsEnabled;
+extern bool wsEnabled;
 extern long msAfterWhichLEDsBrightenOnBeatMode;
 extern double msLEDsTakeToBrightenOnBeatMode;
 extern double statusLEDBrightness;
