@@ -63,10 +63,10 @@ void InitIMU() {
     //BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr);
 }
 char concatinated[100] ="";
+char tmp[100];
 
 void AppendDouble(double value) {
   std::string s = std::to_string(value);
-  char *tmp = new char[s.length() + 1];
   s.copy(tmp, s.length());
   tmp[s.length()] = '\0';
   strcat(concatinated, tmp);
@@ -74,7 +74,6 @@ void AppendDouble(double value) {
 
 void AppendLong(long value) {
   std::string s = std::to_string(value);
-  char *tmp = new char[s.length() + 1];
   s.copy(tmp, s.length());
   tmp[s.length()] = '\0';
   strcat(concatinated, tmp);
@@ -253,6 +252,7 @@ void UpdateIMU() {
     // magnitude
     accelerationMagnitudeRaw = sqrt(accel[0]*accel[0] + accel[1]*accel[1] + accel[2]*accel[2])/16384.0 - 1; // make laying on the floor 0
     accelerationMagnitude = lpf.update(accelerationMagnitudeRaw, deltaTimeSeconds, 4);
+    //accelerationMagnitude = accelerationMagnitudeRaw;
     if(isnan(accelerationMagnitude) || accelerationMagnitude == 0) {
       lpf = LowPassFilter(4, deltaTimeSeconds);
       // use raw data for this time
