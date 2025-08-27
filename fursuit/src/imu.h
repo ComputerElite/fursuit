@@ -14,5 +14,9 @@ extern char concatinated[];
 extern long beatSignalTime;
 extern double bps;
 extern double bpm;
+extern bool imuWorking;
 extern void InitIMU();
 extern void UpdateIMU();
+
+extern int totalSteps;
+extern int stepsSinceLastSend;

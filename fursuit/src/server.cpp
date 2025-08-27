@@ -9,6 +9,7 @@
 #include "html.h"
 #include "preferences.h"
 #include "controls.h"
+#include "weather.hpp"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -127,6 +128,16 @@ void SetupServer()
     deserializeJson(doc, data, len);
     ApplyConfig(doc);
     request->send(200); });
+  server.on("/weather", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+    StaticJsonDocument<1024> doc;
+    doc["t"] = temperature;
+    doc["h"] = humidity;
+    doc["p"] = pressure;
+    doc["a"] = altitude;
+    String output;
+    serializeJson(doc, output);
+    request->send(200, "application/json", output); });
   // get/set wifi
   server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request)
             {

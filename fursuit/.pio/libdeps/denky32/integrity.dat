@@ -1,5 +1,7 @@
-fastled/FastLED@^3.6.0
 bblanchon/ArduinoJson@^6.21.3
+esphome/ESPAsyncWebServer-esphome@^3.1.0
+adafruit/Adafruit BME280 Library@^2.3.0
 dfrobot/DFRobot_BMI160@^1.0.0
 Wire
-esphome/ESPAsyncWebServer-esphome@^3.1.0
+adafruit/DHT sensor library@^1.4.6
+fastled/FastLED@^3.6.0

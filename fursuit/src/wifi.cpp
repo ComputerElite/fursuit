@@ -22,17 +22,11 @@ bool firstConnect = true;
 long disconnectedTime = 0;
 bool softAPStarted = false;
 
-void BeginSetup() {
-    wifiStatus = "Please connect to a wifi network to save power";
-    WiFi.disconnect();
-    Serial.println("SoftAP starting");
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(setupSSID, setupPassword);
-    softAPStarted = true;
-    wifiStatusEnum = WifiStatus::WIFI_AP_OPEN;
-}
 
 bool isTryingToConnectToNewNetwork = false;
+bool startedScanTask = false;
+
+void BeginSetup();
 
 
 void ConnectWifi() {
@@ -78,11 +72,12 @@ void BeginWifi() {
 }
 
 int attempt = 0;
+const int MAX_ATTEMPTS = 2;
 
 void ConnectToLastNetworkIfApplicable() {
     if(isTryingToConnectToNewNetwork) {
         attempt++;
-        if(attempt >= 3) {
+        if(attempt >= MAX_ATTEMPTS) {
             if(firstConnect) {
                 firstConnect = false;
                 BeginSetup();
@@ -111,7 +106,7 @@ void ConnectToLastNetworkIfApplicable() {
         ConnectWifi();
     } else {
         attempt++;
-        if(attempt >= 3) {
+        if(attempt >= MAX_ATTEMPTS) {
             attempt = 0;
             Serial.println("Max number of attempts reached. Starting SoftAP");
             BeginSetup();
@@ -123,6 +118,7 @@ void ConnectToLastNetworkIfApplicable() {
         ConnectWifi();
     }
 }
+
 
 void HandleWifi() {
     if(WiFi.status() == WL_CONNECTED) {
@@ -155,7 +151,7 @@ void HandleWifi() {
     if(WiFi.status() == WL_CONNECTION_LOST) {
         disconnectedTime = 0;
         Serial.println("Connection lost, reconnecting");
-        ConnectWifi();
+        ConnectToLastNetworkIfApplicable();
         return;
     }
     if(WiFi.status() == WL_DISCONNECTED) {
@@ -167,5 +163,49 @@ void HandleWifi() {
             ConnectToLastNetworkIfApplicable();
         }
         return;
+    }
+}
+
+const unsigned long softAPScanInterval = 15000;
+
+void wifiScanTask(void* pvParameters) {
+
+  while (true) {
+    if(softAPStarted) {
+        // scan for wifi
+        Serial.println("Scanning for saved SSID while in SoftAP...");
+        int n = WiFi.scanNetworks();
+        for (int i = 0; i < n; ++i) {
+            if (WiFi.SSID(i) == ssid) {
+                Serial.println("Saved SSID found, attempting connection...");
+                ConnectToLastNetworkIfApplicable();
+                return;
+            }
+        }
+    }
+    vTaskDelay(softAPScanInterval / portTICK_PERIOD_MS);  // Wait 5 seconds
+  }
+}
+
+void BeginSetup() {
+    wifiStatus = "Please connect to a wifi network to save power";
+    WiFi.disconnect();
+    Serial.println("SoftAP starting");
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(setupSSID, setupPassword);
+    softAPStarted = true;
+    wifiStatusEnum = WifiStatus::WIFI_AP_OPEN;
+
+    if(!startedScanTask) {
+        startedScanTask = true;
+        xTaskCreatePinnedToCore(
+            wifiScanTask,       // Function to run
+            "wifiScanTask",     // Name
+            8192,           // Stack size in bytes
+            NULL,           // Parameters
+            1,              // Priority
+            NULL,           // Task handle
+            0               // Core 0
+        );
     }
 }

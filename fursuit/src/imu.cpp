@@ -46,20 +46,27 @@ long beatSignalTime = 0;
 double accelerationMagnitudeRaw = 0; // magnitude of the acceleration
 double accelerationMagnitude = 0; // magnitude of the acceleration (low pass filtered)
 
+int stepsSinceLastSend = 0; // steps since last send
+int totalSteps = 0; // total steps taken
+
+bool imuWorking = false;
 
 LowPassFilter lpf = LowPassFilter(4, 0.24);
 
 void InitIMU() {
     if (bmi160.softReset() != BMI160_OK){
         Serial.println("reset false");
-        while(1);
+        imuWorking = false;
+        return;
     }
     
     //set and init the bmi160 i2c address
     if (bmi160.I2cInit(i2c_addr) != BMI160_OK){
         Serial.println("init false");
-        while(1);
+        imuWorking = false;
+        return;
     }
+    imuWorking = true;
     //BMI160.begin(BMI160GenClass::I2C_MODE, i2c_addr);
 }
 char concatinated[100] ="";
@@ -79,6 +86,7 @@ void AppendLong(long value) {
   strcat(concatinated, tmp);
 }
 bool ReadIMU() {
+  if(!imuWorking) return false;
   concatinated[0] = '\0';
   strcat(concatinated, "t");
   AppendLong(millis());
@@ -153,6 +161,8 @@ void UpdateVariables() {
       jumpLengths.push_back(currentJumpLength);
       inAirStartSignalTime = timeOfFirstInAirMeasurement;
       inAirStartSignal = true;
+      stepsSinceLastSend += 1;
+      totalSteps += 1;
       strcat(concatinated, " s");
 
       if(serialOn) {
