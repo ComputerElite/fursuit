@@ -1,2 +1,2 @@
 #define UPLOAD_PASSWORD "password"
-#define UPLOAD_URL ""
+#define UPLOAD_URL "https://weather.example.com/"
