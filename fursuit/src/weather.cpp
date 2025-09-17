@@ -71,13 +71,17 @@ void httpTask(void* pvParameters) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);  // Wait 5 seconds
   }
 }
+bool weatherAvailable = false;
 
 void SetupWeather()
 {
     //dht.begin();
     if(!bme.begin(0x76)) {
         Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        // If other data than from the BME should be sent, remove this return
+        return;
     }
+    weatherAvailable = true;
 
     xTaskCreatePinnedToCore(
         httpTask,       // Function to run
@@ -93,7 +97,7 @@ void SetupWeather()
 
 void UpdateWeather()
 {
-    if (lastLoop - lastRead < 1000)
+    if (lastLoop - lastRead < 1000 || !weatherAvailable)
         return; // we can only read every second
     lastRead = lastLoop;
     
